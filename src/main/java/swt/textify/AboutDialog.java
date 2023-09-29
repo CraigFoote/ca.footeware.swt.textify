@@ -94,7 +94,7 @@ public class AboutDialog extends Dialog {
 		});
 
 		Link versionLink = new Link(shell, SWT.NONE);
-		versionLink.setText("<a href=\"http://google.ca\">" + getVersion() + "</a>");
+		versionLink.setText("<a href=\"https://github.com/CraigFoote/ca.footeware.swt.textify/releases\">" + getVersion() + "</a>");
 		gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
 		versionLink.setLayoutData(gridData);
 		versionLink.addSelectionListener(new SelectionAdapter() {
