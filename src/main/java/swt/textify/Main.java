@@ -1,10 +1,10 @@
 /**
- * 
+ *
  */
 package swt.textify;
 
 /**
- * 
+ *
  */
 public class Main {
 

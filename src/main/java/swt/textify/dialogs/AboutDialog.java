@@ -1,7 +1,7 @@
 /**
- * 
+ *
  */
-package swt.textify;
+package swt.textify.dialogs;
 
 import java.awt.Desktop;
 import java.io.FileReader;
@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * 
+ *
  */
 public class AboutDialog extends Dialog {
 
@@ -37,29 +37,6 @@ public class AboutDialog extends Dialog {
 
 	public AboutDialog(Shell parent) {
 		super(parent, SWT.APPLICATION_MODAL);
-	}
-
-	public void open() {
-		Shell shell = new Shell(getParent(), getStyle());
-		shell.setText(getText());
-		createContents(shell);
-		shell.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (programmerImage != null) {
-					programmerImage.dispose();
-					programmerImage = null;
-				}
-			}
-		});
-		shell.pack();
-		shell.open();
-		Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
 	}
 
 	private void createContents(final Shell shell) {
@@ -94,7 +71,8 @@ public class AboutDialog extends Dialog {
 		});
 
 		Link versionLink = new Link(shell, SWT.NONE);
-		versionLink.setText("<a href=\"https://github.com/CraigFoote/ca.footeware.swt.textify/releases\">" + getVersion() + "</a>");
+		versionLink.setText(
+				"<a href=\"https://github.com/CraigFoote/ca.footeware.swt.textify/releases\">" + getVersion() + "</a>");
 		gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
 		versionLink.setLayoutData(gridData);
 		versionLink.addSelectionListener(new SelectionAdapter() {
@@ -120,6 +98,7 @@ public class AboutDialog extends Dialog {
 		button.setLayoutData(gridData);
 		button.setFocus();
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				shell.close();
 			}
@@ -135,6 +114,29 @@ public class AboutDialog extends Dialog {
 			return model.getVersion();
 		} catch (IOException | XmlPullParserException e) {
 			return e.getMessage();
+		}
+	}
+
+	public void open() {
+		Shell shell = new Shell(getParent(), getStyle());
+		shell.setText(getText());
+		shell.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				if (programmerImage != null) {
+					programmerImage.dispose();
+					programmerImage = null;
+				}
+			}
+		});
+		createContents(shell);
+		shell.pack();
+		shell.open();
+		Display display = getParent().getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
 		}
 	}
 }
