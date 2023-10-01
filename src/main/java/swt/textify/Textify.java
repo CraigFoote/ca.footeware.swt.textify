@@ -16,6 +16,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
@@ -90,7 +92,7 @@ public class Textify {
 				box.setText("Save");
 				box.setMessage("The text has been modified. Would you like to save it?");
 				if (box.open() == SWT.YES) {
-					save(shell);
+					save();
 				}
 			}
 
@@ -116,7 +118,7 @@ public class Textify {
 		newItem.setImage(newImage);
 		newItem.setToolTipText("Start a new document");
 		newItem.addListener(SWT.Selection, event -> {
-			newFile(shell);
+			newFile();
 		});
 
 		// Open
@@ -126,7 +128,7 @@ public class Textify {
 		openImage = new Image(display, in);
 		openItem.setImage(openImage);
 		openItem.setToolTipText("Open an existing document");
-		openItem.addListener(SWT.Selection, event -> openFile(shell));
+		openItem.addListener(SWT.Selection, event -> openFile());
 
 		// Save
 		final ToolItem saveItem = new ToolItem(toolBarLeft, SWT.NONE);
@@ -135,9 +137,7 @@ public class Textify {
 		saveImage = new Image(display, in);
 		saveItem.setToolTipText("Save current document to file");
 		saveItem.setImage(saveImage);
-		saveItem.addListener(SWT.Selection, event -> {
-			save(shell);
-		});
+		saveItem.addListener(SWT.Selection, event -> save());
 
 		// Save As
 		final ToolItem saveAsItem = new ToolItem(toolBarLeft, SWT.NONE);
@@ -146,9 +146,7 @@ public class Textify {
 		saveAsImage = new Image(display, in);
 		saveAsItem.setImage(saveAsImage);
 		saveAsItem.setToolTipText("Save current document as new file");
-		saveAsItem.addListener(SWT.Selection, event -> {
-			saveAs(shell);
-		});
+		saveAsItem.addListener(SWT.Selection, event -> saveAs());
 
 		// right toolbar
 		final ToolBar toolBarRight = new ToolBar(shell, SWT.NONE);
@@ -177,9 +175,7 @@ public class Textify {
 		// About menu
 		MenuItem aboutItem = new MenuItem(menu, SWT.PUSH);
 		aboutItem.setText("About");
-		aboutItem.addListener(SWT.Selection, event -> {
-			new AboutDialog(shell).open();
-		});
+		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(shell).open());
 
 		// hamburger
 		final ToolItem item = new ToolItem(toolBarRight, SWT.NONE);
@@ -210,6 +206,19 @@ public class Textify {
 				textChanged = true;
 				numCharsLabel.setText(text.getCharCount() + " chars");
 				statusbar.layout(true);
+			}
+		});
+		text.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if ((e.stateMask & SWT.CTRL) != 0) {
+					if (e.keyCode == 115) { // ctrl+s
+						save();
+					} else if (e.keyCode == 119) { // ctrl+w
+						shell.close();
+					}
+				}
+				super.keyReleased(e);
 			}
 		});
 		try {
@@ -398,10 +407,8 @@ public class Textify {
 
 	/**
 	 * Respond to the user pressing the New button.
-	 * 
-	 * @param shell {@link Shell}
 	 */
-	private void newFile(Shell shell) {
+	private void newFile() {
 		if (textChanged) {
 			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
@@ -412,7 +419,7 @@ public class Textify {
 			} else if (result == SWT.NO) {
 				clear();
 			} else if (result == SWT.YES) {
-				if (save(shell)) {
+				if (save()) {
 					clear();
 				}
 			}
@@ -435,10 +442,8 @@ public class Textify {
 
 	/**
 	 * Open a file.
-	 *
-	 * @param shell {@link Shell}
 	 */
-	protected void openFile(final Shell shell) {
+	protected void openFile() {
 		if (textChanged) {
 			// prompt user to save
 			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
@@ -448,7 +453,7 @@ public class Textify {
 			if (result == SWT.CANCEL) {
 				return;
 			} else if (result == SWT.YES) {
-				save(shell);
+				save();
 			}
 		}
 		// proceed with opening a file
@@ -463,10 +468,9 @@ public class Textify {
 	/**
 	 * Save text changes to file.
 	 *
-	 * @param shell {@link Shell}
-	 * @return
+	 * @return boolean true if text was saved to file
 	 */
-	private boolean save(final Shell shell) {
+	private boolean save() {
 		// save text to file
 		File file = null;
 		// pessimistic view on writing
@@ -514,10 +518,8 @@ public class Textify {
 
 	/**
 	 * Prompt for filename and location and save text to file.
-	 *
-	 * @param shell {@link Shell}
 	 */
-	private void saveAs(Shell shell) {
+	private void saveAs() {
 		// save text to file
 		File file = null;
 		// pessimistic view on writing
