@@ -11,7 +11,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
-		<exec.mainClass>swt.textify.Textify</exec.mainClass>
+		<exec.mainClass>swt.textify.Main</exec.mainClass>
 	</properties>
 
 	<dependencies>
@@ -41,7 +41,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>swt.textify.Textify</mainClass>
+							<mainClass>swt.textify.Main</mainClass>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 					</archive>
@@ -64,7 +64,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>swt.textify.Textify</mainClass>
+							<mainClass>swt.textify.Main</mainClass>
 							<addDefaultImplementationEntries>
 								true
 							</addDefaultImplementationEntries>

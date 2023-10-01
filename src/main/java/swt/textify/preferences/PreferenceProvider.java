@@ -31,20 +31,23 @@ public class PreferenceProvider {
 
 	private void init() {
 		try {
-			String folderLocation = "/home/" + System.getProperty("user.name") + "/.local/share/textify/";
-			File folder = new File(folderLocation);
+			final String name = System.getenv().get("SUDO_USER") != null ? System.getenv().get("SUDO_USER")
+					: System.getProperty("user.name");
+
+			final String folderLocation = "/home/" + name + "/.local/share/textify/";
+			final File folder = new File(folderLocation);
 			if (!folder.exists()) {
 				folder.mkdir();
 			}
-			this.prefsPath = folderLocation + "textify.properties";
-			File file = new File(prefsPath);
+			prefsPath = folderLocation + "textify.properties";
+			final File file = new File(prefsPath);
 			if (!file.exists()) {
 				file.createNewFile();
 			} else {
 				this.props.load(new FileInputStream(file));
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Preferences are disabled (" + prefsPath + "): " + e.getMessage());
 		}
 	}
 
@@ -52,7 +55,7 @@ public class PreferenceProvider {
 		try {
 			this.props.store(new FileWriter(prefsPath), null);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Error saving preferences: " + e.getMessage());
 		}
 	}
 
