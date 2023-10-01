@@ -204,6 +204,7 @@ public class Textify {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				textChanged = true;
+				shell.setText("* " + shell.getText().replace("* ", ""));
 				numCharsLabel.setText(text.getCharCount() + " chars");
 				statusbar.layout(true);
 			}
