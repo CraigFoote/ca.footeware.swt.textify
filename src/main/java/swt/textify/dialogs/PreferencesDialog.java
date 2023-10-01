@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
+import swt.textify.exceptions.FontException;
 import swt.textify.preferences.FontUtils;
 import swt.textify.preferences.PreferenceProvider;
 
@@ -50,11 +51,17 @@ public class PreferencesDialog extends Dialog {
 		final Label fontLabel = new Label(fontGroup, SWT.NONE);
 		gridData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		fontLabel.setLayoutData(gridData);
-		final FontData fontData = FontUtils.getFontData(this.prefs.getProperty("font", ""));
-		final Font font = new Font(shell.getDisplay(), fontData);
-		fontLabel.setFont(font);
-		fontLabel.setText(FontUtils.getDisplayText(fontData));
-		font.dispose();
+		FontData fontData;
+		try {
+			final String fontProperty = this.prefs.getProperty("font", FontUtils.getDefaultFontData().toString());
+			fontData = FontUtils.getFontData(fontProperty);
+			final Font font = new Font(shell.getDisplay(), fontData);
+			fontLabel.setFont(font);
+			fontLabel.setText(FontUtils.getDisplayText(fontData));
+			font.dispose();
+		} catch (FontException e) {
+			System.err.println(e.getMessage());
+		}
 
 		// font button
 		final Button fontButton = new Button(fontGroup, SWT.PUSH);
@@ -64,7 +71,11 @@ public class PreferencesDialog extends Dialog {
 			public void widgetSelected(SelectionEvent e) {
 				final FontDialog dialog = new FontDialog(shell);
 				String fontProperty = prefs.getProperty("font", new FontData("sans", 14, SWT.NORMAL).toString());
-				dialog.setFontList(new FontData[] { FontUtils.getFontData(fontProperty) });
+				try {
+					dialog.setFontList(new FontData[] { FontUtils.getFontData(fontProperty) });
+				} catch (FontException e1) {
+					System.err.println(e1.getMessage());
+				}
 				FontData fontData = dialog.open();
 				if (fontData != null) {
 					final Font font = new Font(shell.getDisplay(), fontData);

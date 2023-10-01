@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import swt.textify.dialogs.AboutDialog;
 import swt.textify.dialogs.PreferencesDialog;
+import swt.textify.exceptions.FontException;
 import swt.textify.preferences.FontUtils;
 import swt.textify.preferences.PreferenceProvider;
 
@@ -45,6 +46,7 @@ import swt.textify.preferences.PreferenceProvider;
  */
 public class Textify {
 
+	private Shell shell;
 	private Text text;
 	private Image newImage;
 	private Image openImage;
@@ -58,9 +60,9 @@ public class Textify {
 	/**
 	 * Constructor.
 	 */
-	public Textify() {
+	public Textify(String[] args) {
 		final Display display = new Display();
-		final Shell shell = new Shell(display);
+		shell = new Shell(display);
 		shell.setText("textify");
 
 		// preferences
@@ -158,9 +160,14 @@ public class Textify {
 		prefsItem.setText("Preferences");
 		prefsItem.addListener(SWT.Selection, event -> {
 			new PreferencesDialog(shell, prefs).open();
-			Font font = getFont(prefs, display);
-			text.setFont(font);
-			font.dispose();
+			Font font;
+			try {
+				font = getFont(prefs, display);
+				text.setFont(font);
+				font.dispose();
+			} catch (FontException e1) {
+				showError(e1.getMessage());
+			}
 		});
 
 		// About menu
@@ -199,9 +206,13 @@ public class Textify {
 				textChanged = true;
 			}
 		});
-		Font font = getFont(prefs, display);
-		text.setFont(font);
-		font.dispose();
+		try {
+			final Font font = getFont(prefs, display);
+			text.setFont(font);
+			font.dispose();
+		} catch (FontException e1) {
+			showError(e1.getMessage());
+		}
 
 		scrolledComposite.setContent(text);
 		scrolledComposite.setExpandVertical(true);
@@ -213,6 +224,32 @@ public class Textify {
 				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
+
+		// handle cli arg
+		if (args.length > 1) {
+			String message = "Expected at most one argument, a file, but received: " + args.length;
+			System.err.println(message);
+			showError(message);
+		}
+		if (args.length == 1) {
+			// file received
+			System.out.println("File received: " + args[0]);
+			File file = new File(args[0]);
+			if (!file.exists()) {
+				try {
+					System.out.println("File does not exist - creating it...");
+					file.createNewFile();
+					System.out.println("File created - loading...");
+					loadFile(file);
+				} catch (IOException e1) {
+					final String message = "Error loading file:\n" + e1.getMessage();
+					System.err.println(message);
+					showError(message);
+				}
+			} else {
+				loadFile(file);
+			}
+		}
 
 		text.setFocus();
 
@@ -277,9 +314,22 @@ public class Textify {
 		}
 	}
 
-	private Font getFont(PreferenceProvider prefs, Display display) {
+	/**
+	 * Get the font from preferences. The caller is responsible for disposing of it.
+	 * 
+	 * @param prefs   {@link PreferenceProvider}
+	 * @param display {@link Display}
+	 * @return {@link Font}
+	 * @throws FontException if an error occurs getting FontData from prefs property
+	 */
+	private Font getFont(PreferenceProvider prefs, Display display) throws FontException {
 		String fontProperty = prefs.getProperty("font", null);
-		FontData fontData = FontUtils.getFontData(fontProperty);
+		FontData fontData;
+		if (fontProperty == null) {
+			fontData = new FontData("sans", 14, SWT.NORMAL);
+		} else {
+			fontData = FontUtils.getFontData(fontProperty);
+		}
 		return new Font(display, fontData);
 	}
 
@@ -294,6 +344,35 @@ public class Textify {
 				|| mimeType.equals("audio/mpegurl") || mimeType.contains("x-sh");
 	}
 
+	/**
+	 * Load the contents of the provided file into the text widget.
+	 * 
+	 * @param file {@link File}
+	 */
+	private void loadFile(File file) {
+		try {
+			checkFile(file);
+			// load contents of file
+			List<String> allLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+			StringBuilder builder = new StringBuilder();
+			for (String line : allLines) {
+				builder.append(line);
+				builder.append("\n");
+			}
+			// set in text widget
+			text.setText(builder.toString());
+			currentFile = file;
+			textChanged = false;
+		} catch (IOException | IllegalArgumentException e) {
+			showError(e.getMessage());
+		}
+	}
+
+	/**
+	 * Respond to the user pressing the New button.
+	 * 
+	 * @param shell {@link Shell}
+	 */
 	private void newFile(Shell shell) {
 		if (textChanged) {
 			final MessageBox box = new MessageBox(shell, SWT.CANCEL | SWT.OK | SWT.ICON_QUESTION);
@@ -326,27 +405,10 @@ public class Textify {
 		} else {
 			// proceed with opening a file
 			final FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-			final String filePath = dialog.open();
-			if (filePath != null && !filePath.isEmpty()) {
-				File file = new File(filePath);
-				try {
-					checkFile(file);
-					// load contents of file
-					List<String> allLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-					StringBuilder builder = new StringBuilder();
-					for (String line : allLines) {
-						builder.append(line);
-					}
-					// set in text widget
-					text.setText(builder.toString());
-					currentFile = file;
-					textChanged = false;
-				} catch (IOException | IllegalArgumentException e) {
-					MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
-					messageBox.setText("Error");
-					messageBox.setMessage(e.getMessage());
-					messageBox.open();
-				}
+			final String path = dialog.open();
+			if (path != null && !path.isEmpty()) {
+				File file = new File(path);
+				loadFile(file);
 			}
 		}
 	}
@@ -390,10 +452,7 @@ public class Textify {
 				currentFile = file;
 				textChanged = false;
 			} catch (IOException e) {
-				MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
-				messageBox.setText("Error");
-				messageBox.setMessage(e.getMessage());
-				messageBox.open();
+				showError(e.getMessage());
 			}
 		}
 	}
@@ -431,11 +490,20 @@ public class Textify {
 				currentFile = file;
 				textChanged = false;
 			} catch (IOException e) {
-				MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
-				messageBox.setText("Error");
-				messageBox.setMessage(e.getMessage());
-				messageBox.open();
+				showError(e.getMessage());
 			}
 		}
+	}
+
+	/**
+	 * Display an error message to the user.
+	 * 
+	 * @param string {@link String}
+	 */
+	private void showError(String string) {
+		MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
+		messageBox.setText("Error");
+		messageBox.setMessage(string);
+		messageBox.open();
 	}
 }

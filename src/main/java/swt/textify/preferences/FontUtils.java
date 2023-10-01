@@ -3,7 +3,10 @@
  */
 package swt.textify.preferences;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
+
+import swt.textify.exceptions.FontException;
 
 /**
  *
@@ -11,11 +14,17 @@ import org.eclipse.swt.graphics.FontData;
 public class FontUtils {
 
 	public static String getDisplayText(FontData fontData) {
-		return fontData.getName() + " " + fontData.getHeight() + " " + getStyleName(fontData.getStyle());
+		if (fontData != null) {
+			return fontData.getName() + " " + fontData.getHeight() + " " + getStyleName(fontData.getStyle());
+		}
+		return "Unknown";
 	}
 
-	public static FontData getFontData(String fontProperty) {
+	public static FontData getFontData(String fontProperty) throws FontException {
 		String[] split = fontProperty.split("\\|");
+		if (split.length < 4) {
+			throw new FontException("Expected 4+ fontdata properties, received: " + fontProperty);
+		}
 		String name = split[1];
 		int height = (int) Double.parseDouble(split[2]);
 		int style = Integer.parseInt(split[3]);
@@ -39,5 +48,9 @@ public class FontUtils {
 		default:
 			return "Unknown";
 		}
+	}
+
+	public static FontData getDefaultFontData() {
+		return new FontData("sans", 14, SWT.NORMAL);
 	}
 }
