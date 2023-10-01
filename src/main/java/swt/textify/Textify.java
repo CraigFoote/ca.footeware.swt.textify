@@ -25,8 +25,10 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -56,6 +58,9 @@ public class Textify {
 	private File currentFile;
 	private boolean textChanged = false;
 	private PreferenceProvider prefs;
+	private Composite statusbar;
+	private Label filenameLabel;
+	private Label numCharsLabel;
 
 	/**
 	 * Constructor.
@@ -85,7 +90,7 @@ public class Textify {
 				box.setText("Save");
 				box.setMessage("The text has been modified. Would you like to save it?");
 				if (box.open() == SWT.YES) {
-					saveChanges(shell);
+					save(shell);
 				}
 			}
 
@@ -131,7 +136,7 @@ public class Textify {
 		saveItem.setToolTipText("Save current document to file");
 		saveItem.setImage(saveImage);
 		saveItem.addListener(SWT.Selection, event -> {
-			saveChanges(shell);
+			save(shell);
 		});
 
 		// Save As
@@ -142,7 +147,7 @@ public class Textify {
 		saveAsItem.setImage(saveAsImage);
 		saveAsItem.setToolTipText("Save current document as new file");
 		saveAsItem.addListener(SWT.Selection, event -> {
-			saveChangesAs(shell);
+			saveAs(shell);
 		});
 
 		// right toolbar
@@ -160,9 +165,8 @@ public class Textify {
 		prefsItem.setText("Preferences");
 		prefsItem.addListener(SWT.Selection, event -> {
 			new PreferencesDialog(shell, prefs).open();
-			Font font;
 			try {
-				font = getFont(prefs, display);
+				final Font font = getFont(prefs, display);
 				text.setFont(font);
 				font.dispose();
 			} catch (FontException e1) {
@@ -204,6 +208,8 @@ public class Textify {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				textChanged = true;
+				numCharsLabel.setText(text.getCharCount() + " chars");
+				statusbar.layout(true);
 			}
 		});
 		try {
@@ -214,6 +220,7 @@ public class Textify {
 			showError(e1.getMessage());
 		}
 
+		// finish scrollbar init
 		scrolledComposite.setContent(text);
 		scrolledComposite.setExpandVertical(true);
 		scrolledComposite.setExpandHorizontal(true);
@@ -224,6 +231,25 @@ public class Textify {
 				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
+
+		// statusbar
+		statusbar = new Composite(shell, SWT.NONE);
+		gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
+		gridData.heightHint = 20;
+		statusbar.setLayoutData(gridData);
+		gridLayout = new GridLayout(2, false);
+		statusbar.setLayout(gridLayout);
+
+		// filename label
+		filenameLabel = new Label(statusbar, SWT.NONE);
+		gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		filenameLabel.setLayoutData(gridData);
+
+		// # chars
+		numCharsLabel = new Label(statusbar, SWT.NONE);
+		numCharsLabel.setText("0 chars");
+		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		numCharsLabel.setLayoutData(gridData);
 
 		// handle cli arg
 		if (args.length > 1) {
@@ -363,6 +389,8 @@ public class Textify {
 			text.setText(builder.toString());
 			currentFile = file;
 			textChanged = false;
+			filenameLabel.setText(file.getAbsolutePath());
+			shell.setText(file.getName());
 		} catch (IOException | IllegalArgumentException e) {
 			showError(e.getMessage());
 		}
@@ -375,17 +403,34 @@ public class Textify {
 	 */
 	private void newFile(Shell shell) {
 		if (textChanged) {
-			final MessageBox box = new MessageBox(shell, SWT.CANCEL | SWT.OK | SWT.ICON_QUESTION);
+			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
 			box.setMessage("The text has been modified. Would you like to save it?");
-			if (box.open() == SWT.OK) {
-				saveChanges(shell);
+			int result = box.open();
+			if (result == SWT.CANCEL) {
+				return;
+			} else if (result == SWT.NO) {
+				clear();
+			} else if (result == SWT.YES) {
+				if (save(shell)) {
+					clear();
+				}
 			}
 		} else {
-			text.setText("");
-			currentFile = null;
-			textChanged = false;
+			clear();
 		}
+	}
+
+	/**
+	 * Clears text widget and sets appropriate labels.
+	 */
+	private void clear() {
+		text.setText("");
+		currentFile = null;
+		textChanged = false;
+		filenameLabel.setText("");
+		numCharsLabel.setText("0 chars");
+		shell.setText("textify");
 	}
 
 	/**
@@ -396,20 +441,22 @@ public class Textify {
 	protected void openFile(final Shell shell) {
 		if (textChanged) {
 			// prompt user to save
-			final MessageBox box = new MessageBox(shell, SWT.CANCEL | SWT.OK | SWT.ICON_QUESTION);
+			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
 			box.setMessage("The text has been modified. Would you like to save it?");
-			if (box.open() == SWT.OK) {
-				saveChanges(shell);
+			int result = box.open();
+			if (result == SWT.CANCEL) {
+				return;
+			} else if (result == SWT.YES) {
+				save(shell);
 			}
-		} else {
-			// proceed with opening a file
-			final FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-			final String path = dialog.open();
-			if (path != null && !path.isEmpty()) {
-				File file = new File(path);
-				loadFile(file);
-			}
+		}
+		// proceed with opening a file
+		final FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+		final String path = dialog.open();
+		if (path != null && !path.isEmpty()) {
+			File file = new File(path);
+			loadFile(file);
 		}
 	}
 
@@ -417,8 +464,9 @@ public class Textify {
 	 * Save text changes to file.
 	 *
 	 * @param shell {@link Shell}
+	 * @return
 	 */
-	private void saveChanges(final Shell shell) {
+	private boolean save(final Shell shell) {
 		// save text to file
 		File file = null;
 		// pessimistic view on writing
@@ -436,12 +484,15 @@ public class Textify {
 				file = new File(chosenPath);
 				if (file.exists()) {
 					// prompt for overwrite
-					final MessageBox box = new MessageBox(shell, SWT.CANCEL | SWT.OK | SWT.ICON_QUESTION);
+					final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 					box.setText("Overwrite");
 					box.setMessage("File exists. Would you like to overwrite it?");
-					write = box.open() == SWT.OK;
-				} else {
-					write = true;
+					int result = box.open();
+					if (result == SWT.CANCEL) {
+						return false;
+					} else if (result == SWT.YES) {
+						write = true;
+					}
 				}
 			}
 		}
@@ -451,10 +502,14 @@ public class Textify {
 				writer.write(text.getText());
 				currentFile = file;
 				textChanged = false;
+				filenameLabel.setText(file.getAbsolutePath());
+				shell.setText(file.getName());
+				return true;
 			} catch (IOException e) {
 				showError(e.getMessage());
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -462,7 +517,7 @@ public class Textify {
 	 *
 	 * @param shell {@link Shell}
 	 */
-	private void saveChangesAs(Shell shell) {
+	private void saveAs(Shell shell) {
 		// save text to file
 		File file = null;
 		// pessimistic view on writing
@@ -475,10 +530,15 @@ public class Textify {
 			file = new File(chosenPath);
 			if (file.exists()) {
 				// prompt for overwrite
-				final MessageBox box = new MessageBox(shell, SWT.CANCEL | SWT.OK | SWT.ICON_QUESTION);
+				final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 				box.setText("Overwrite");
 				box.setMessage("File exists. Would you like to overwrite it?");
-				write = box.open() == SWT.OK;
+				int result = box.open();
+				if (result == SWT.CANCEL) {
+					return;
+				} else if (result == SWT.YES) {
+					write = true;
+				}
 			} else {
 				write = true;
 			}
@@ -489,6 +549,8 @@ public class Textify {
 				writer.write(text.getText());
 				currentFile = file;
 				textChanged = false;
+				filenameLabel.setText(file.getAbsolutePath());
+				shell.setText(file.getName());
 			} catch (IOException e) {
 				showError(e.getMessage());
 			}
