@@ -11,11 +11,16 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.util.Properties;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  *
  */
 public class PreferenceProvider {
 
+	private static final Logger LOGGER = LogManager.getLogger(PreferenceProvider.class);
 	private Properties props;
 	private String prefsPath;
 
@@ -23,6 +28,7 @@ public class PreferenceProvider {
 	 * Constructor.
 	 */
 	public PreferenceProvider() {
+		LOGGER.log(Level.DEBUG, "Constructing PreferenceProvider.");
 		this.props = new Properties();
 		init();
 	}
@@ -32,6 +38,7 @@ public class PreferenceProvider {
 	}
 
 	private void init() {
+		LOGGER.log(Level.DEBUG, "Reading prefs.");
 		try {
 			final String name = System.getenv().get("SUDO_USER") != null ? System.getenv().get("SUDO_USER")
 					: System.getProperty("user.name");
@@ -54,19 +61,22 @@ public class PreferenceProvider {
 				}
 			}
 		} catch (IOException e) {
-			System.err.println("Preferences are disabled (" + prefsPath + "): " + e.getMessage());
+			LOGGER.log(Level.ERROR, "Preferences are disabled ({0}): {1}", prefsPath, e.getMessage());
 		}
+		LOGGER.log(Level.DEBUG, "Reading prefs done.");
 	}
 
 	public void save() {
 		try (Writer writer = new FileWriter(prefsPath)) {
 			this.props.store(writer, null);
 		} catch (IOException e) {
-			System.err.println("Error saving preferences: " + e.getMessage());
+			LOGGER.log(Level.ERROR, "Error saving preferences: {0}", e.getMessage());
 		}
 	}
 
 	public void setProperty(String key, String value) {
+		String message = "Saving preference: " + key + "=" + value;
+		LOGGER.log(Level.DEBUG, message);
 		this.props.setProperty(key, value);
 	}
 }

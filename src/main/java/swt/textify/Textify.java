@@ -12,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -49,6 +52,7 @@ import swt.textify.preferences.PreferenceProvider;
 public class Textify {
 
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
+	private static final Logger LOGGER = LogManager.getLogger(Textify.class);
 	private Shell shell;
 	private Text text;
 	private Image newImage;
@@ -67,17 +71,22 @@ public class Textify {
 	 * Constructor.
 	 */
 	public Textify(String[] args) {
+		LOGGER.log(Level.DEBUG, "Constructing Textify.");
 		final Display display = new Display();
 		shell = new Shell(display);
 		shell.setText("textify");
 
 		// preferences
+		LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
 		prefs = new PreferenceProvider();
 
+		LOGGER.log(Level.DEBUG, "Setting shell size.");
 		setShellSize();
 
+		LOGGER.log(Level.DEBUG, "Adding DisposeListener.");
 		shell.addDisposeListener(e -> {
 			// save shell size to prefs
+			LOGGER.log(Level.DEBUG, "Saving shell size as pref.");
 			final Point size = shell.getSize();
 			prefs.setProperty("shell.width", String.valueOf(size.x));
 			prefs.setProperty("shell.height", String.valueOf(size.y));
@@ -94,21 +103,25 @@ public class Textify {
 			}
 
 			// dispose of images
+			LOGGER.log(Level.DEBUG, "Disposing images.");
 			dispose();
 		});
 
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
 
+		LOGGER.log(Level.DEBUG, "Creating toolbar.");
 		createLeftToolbar();
 		createRightToolbar();
 		createScrollingText();
 		createStatusbar();
 
+		LOGGER.log(Level.DEBUG, "Handling CLI args.");
 		handleCliArgs(args);
 
 		text.setFocus();
 
+		LOGGER.log(Level.DEBUG, "Opening Shell.");
 		shell.open();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -117,7 +130,9 @@ public class Textify {
 		}
 
 		// disposes all associated windows and their components
+		LOGGER.log(Level.DEBUG, "Disposing.");
 		display.dispose();
+		LOGGER.log(Level.DEBUG, "Application stopping.");
 	}
 
 	/**
@@ -372,30 +387,25 @@ public class Textify {
 	private void handleCliArgs(String[] args) {
 		// handle cli arg
 		if (args.length > 1) {
-			String message = "Expected at most one argument, a file, but received: " + args.length;
-			System.err.println(message);
-			showError(message);
+			showError("Expected at most one argument, a file, but received: " + args.length);
 		}
 		if (args.length == 1) {
 			// file received
-			System.out.println("File received: " + args[0]);
+			String message = "File received: " + args[0];
+			LOGGER.log(Level.INFO, message);
 			File file = new File(args[0]);
 			if (!file.exists()) {
 				try {
-					System.out.println("File does not exist - creating it...");
+					LOGGER.log(Level.INFO, "File does not exist - creating it.");
 					boolean created = file.createNewFile();
 					if (!created) {
-						final String message = "Unknown error creating file.";
-						System.err.println(message);
-						showError(message);
+						showError("Unknown error creating file.");
 					} else {
-						System.out.println("File created - loading...");
+						LOGGER.log(Level.INFO, "File created - loading...");
 						loadFile(file);
 					}
 				} catch (IOException e1) {
-					final String message = "Error loading file:\n" + e1.getMessage();
-					System.err.println(message);
-					showError(message);
+					showError("Error loading file:\n" + e1.getMessage());
 				}
 			} else {
 				loadFile(file);
@@ -591,6 +601,7 @@ public class Textify {
 	 * @param string {@link String}
 	 */
 	private void showError(String string) {
+		LOGGER.log(Level.ERROR, string);
 		MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
 		messageBox.setText("Error");
 		messageBox.setMessage(string);

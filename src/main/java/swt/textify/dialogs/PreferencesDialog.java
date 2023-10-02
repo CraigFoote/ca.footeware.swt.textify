@@ -3,6 +3,9 @@
  */
 package swt.textify.dialogs;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -27,6 +30,7 @@ import swt.textify.preferences.PreferenceProvider;
  */
 public class PreferencesDialog extends Dialog {
 
+	private static final Logger LOGGER = LogManager.getLogger(PreferencesDialog.class);
 	private PreferenceProvider prefs;
 
 	public PreferencesDialog(Shell parent, PreferenceProvider prefs) {
@@ -58,7 +62,7 @@ public class PreferencesDialog extends Dialog {
 			fontLabel.setText(FontUtils.getDisplayText(fontData));
 			font.dispose();
 		} catch (FontException e) {
-			System.err.println(e.getMessage());
+			LOGGER.log(Level.ERROR, e.getMessage());
 		}
 
 		// font button
@@ -72,7 +76,7 @@ public class PreferencesDialog extends Dialog {
 				try {
 					dialog.setFontList(new FontData[] { FontUtils.getFontData(fontProperty) });
 				} catch (FontException e1) {
-					System.err.println(e1.getMessage());
+					LOGGER.log(Level.ERROR, e1.getMessage());
 				}
 				FontData fontData = dialog.open();
 				if (fontData != null) {
