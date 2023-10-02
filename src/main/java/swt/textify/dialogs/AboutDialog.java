@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -31,6 +34,7 @@ import org.eclipse.swt.widgets.Shell;
 public class AboutDialog extends Dialog {
 
 	private Image programmerImage;
+	private static final Logger LOGGER = LogManager.getLogger(AboutDialog.class);
 
 	public AboutDialog(Shell parent) {
 		super(parent, SWT.APPLICATION_MODAL);
@@ -61,8 +65,12 @@ public class AboutDialog extends Dialog {
 						final URI uri = new URI(url);
 						desktop.browse(uri);
 					} catch (IOException | URISyntaxException ex) {
-						// ignore
+						LOGGER.log(Level.ERROR, "Error opening URL {0}: {1}", url, ex.getMessage());
+					} catch (Exception ex) {
+						LOGGER.log(Level.ERROR, "Weird error opening URL {0}: {1}", url, ex.getMessage());
 					}
+				} else {
+					LOGGER.log(Level.ERROR, "Attempt to open url failed - 'Desktop not supported'.");
 				}
 			}
 		});
