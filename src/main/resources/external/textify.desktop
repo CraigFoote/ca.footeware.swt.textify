@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=textify
+Comment=A minimal text editor.
+Exec=sh -c "$HOME/.local/bin/textify %f"
+Icon=/usr/share/icons/hicolor/scalable/apps/textify.svg
+Terminal=false
+Type=Application
+Categories=Utility;Development;System;Office
+StartupWMClass="SWT", "SWT"
+MimeType=text/plain

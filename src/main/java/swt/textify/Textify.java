@@ -113,7 +113,7 @@ public class Textify {
 		// New
 		final ToolItem newItem = new ToolItem(toolBarLeft, SWT.NONE);
 		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		InputStream in = Textify.class.getResourceAsStream("/new.png");
+		InputStream in = Textify.class.getResourceAsStream("/images/new.png");
 		newImage = new Image(display, in);
 		newItem.setImage(newImage);
 		newItem.setToolTipText("Start a new document");
@@ -124,7 +124,7 @@ public class Textify {
 		// Open
 		final ToolItem openItem = new ToolItem(toolBarLeft, SWT.NONE);
 		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/open.png");
+		in = Textify.class.getResourceAsStream("/images/open.png");
 		openImage = new Image(display, in);
 		openItem.setImage(openImage);
 		openItem.setToolTipText("Open an existing document");
@@ -133,7 +133,7 @@ public class Textify {
 		// Save
 		final ToolItem saveItem = new ToolItem(toolBarLeft, SWT.NONE);
 		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/save.png");
+		in = Textify.class.getResourceAsStream("/images/save.png");
 		saveImage = new Image(display, in);
 		saveItem.setToolTipText("Save current document to file");
 		saveItem.setImage(saveImage);
@@ -142,7 +142,7 @@ public class Textify {
 		// Save As
 		final ToolItem saveAsItem = new ToolItem(toolBarLeft, SWT.NONE);
 		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/save-as.png");
+		in = Textify.class.getResourceAsStream("/images/save-as.png");
 		saveAsImage = new Image(display, in);
 		saveAsItem.setImage(saveAsImage);
 		saveAsItem.setToolTipText("Save current document as new file");
@@ -179,7 +179,7 @@ public class Textify {
 
 		// hamburger
 		final ToolItem item = new ToolItem(toolBarRight, SWT.NONE);
-		in = Textify.class.getResourceAsStream("/hamburger.png");
+		in = Textify.class.getResourceAsStream("/images/hamburger.png");
 		hamburgerImage = new Image(display, in);
 		item.setImage(hamburgerImage);
 		item.addListener(SWT.Selection, event -> {

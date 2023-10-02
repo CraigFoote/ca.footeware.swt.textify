@@ -1,0 +1,44 @@
+#! /bin/bash
+
+echo "Removing really old installations."
+sudo rm -f /usr/local/bin/textify-*.jar
+sudo rm -f /usr/local/bin/textify
+sudo rm -f /usr/share/icons/hicolor/scalable/apps/textify.svg
+echo
+
+echo "Removing previous installation."
+rm -f $HOME/.local/share/applications/textify.desktop
+rm -f $HOME/.local/share/textify/swt.textify-*.jar
+rm -f $HOME/.local/bin/textify
+echo
+
+echo "Creating install folders in $HOME/.local/bin/ and $HOME/.local/share/textify/."
+mkdir -p $HOME/.local/share/textify/
+mkdir -p $HOME/.local/bin/
+echo
+
+echo "Adding $HOME/.local/bin to PATH"
+export PATH=$PATH:/$HOME/.local/bin/
+echo
+
+echo "Copying current release jar to $HOME/.local/share/textify/."
+cp install-files/swt.textify-*.jar $HOME/.local/share/textify/
+echo
+
+echo "Copying icon to /usr/share/icons/hicolor/scalable/apps/."
+sudo cp install-files/textify.svg /usr/share/icons/hicolor/scalable/apps/
+echo
+
+echo "Making launcher executable."
+chmod +x install-files/textify
+echo
+
+echo "Copying launcher to $HOME/.local/bin/."
+cp install-files/textify $HOME/.local/bin/
+echo
+
+echo "Copying .desktop file to $HOME/.local/share/applications/."
+cp install-files/textify.desktop $HOME/.local/share/applications/
+echo
+
+echo "Done :)"

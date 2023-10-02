@@ -4,7 +4,6 @@
 package swt.textify.dialogs;
 
 import java.awt.Desktop;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -40,28 +39,28 @@ public class AboutDialog extends Dialog {
 	}
 
 	private void createContents(final Shell shell) {
-		GridLayout gridLayout = new GridLayout();
+		final GridLayout gridLayout = new GridLayout();
 		gridLayout.verticalSpacing = 20;
 		gridLayout.marginWidth = 10;
 		shell.setLayout(gridLayout);
 
-		InputStream in = AboutDialog.class.getResourceAsStream("/programmer.jpg");
+		final InputStream in = AboutDialog.class.getResourceAsStream("/images/programmer.jpg");
 		programmerImage = new Image(Display.getDefault(), in);
-		Label label = new Label(shell, SWT.NONE);
+		final Label label = new Label(shell, SWT.NONE);
 		label.setImage(programmerImage);
 
-		Link link = new Link(shell, SWT.NONE);
+		final Link link = new Link(shell, SWT.NONE);
 		link.setText("Another fine mess by <a href=\"http://footeware.ca\">Footeware.ca</a>");
 		GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
 		link.setLayoutData(gridData);
 		link.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				String url = e.text;
+				final String url = e.text;
 				if (Desktop.isDesktopSupported()) {
-					Desktop desktop = Desktop.getDesktop();
+					final Desktop desktop = Desktop.getDesktop();
 					try {
-						URI uri = new URI(url);
+						final URI uri = new URI(url);
 						desktop.browse(uri);
 					} catch (IOException | URISyntaxException ex) {
 						// ignore
@@ -70,7 +69,7 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		Link versionLink = new Link(shell, SWT.NONE);
+		final Link versionLink = new Link(shell, SWT.NONE);
 		versionLink.setText(
 				"<a href=\"https://github.com/CraigFoote/ca.footeware.swt.textify/releases\">" + getVersion() + "</a>");
 		gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
@@ -78,11 +77,11 @@ public class AboutDialog extends Dialog {
 		versionLink.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				String url = e.text;
+				final String url = e.text;
 				if (Desktop.isDesktopSupported()) {
-					Desktop desktop = Desktop.getDesktop();
+					final Desktop desktop = Desktop.getDesktop();
 					try {
-						URI uri = new URI(url);
+						final URI uri = new URI(url);
 						desktop.browse(uri);
 					} catch (IOException | URISyntaxException ex) {
 						// ignore
@@ -91,7 +90,7 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		Button button = new Button(shell, SWT.PUSH);
+		final Button button = new Button(shell, SWT.PUSH);
 		button.setText("Close");
 		gridData = new GridData(SWT.END, SWT.CENTER, true, false);
 		gridData.widthHint = 90;
@@ -108,9 +107,11 @@ public class AboutDialog extends Dialog {
 	}
 
 	private String getVersion() {
-		MavenXpp3Reader reader = new MavenXpp3Reader();
-		try (FileReader fileReader = new FileReader("pom.xml")) {
-			Model model = reader.read(fileReader);
+		final InputStream in = AboutDialog.class
+				.getResourceAsStream("/META-INF/maven/ca.footeware/swt.textify/pom.xml");
+		try {
+			final MavenXpp3Reader reader = new MavenXpp3Reader();
+			final Model model = reader.read(in);
 			return model.getVersion();
 		} catch (IOException | XmlPullParserException e) {
 			return e.getMessage();
@@ -118,7 +119,7 @@ public class AboutDialog extends Dialog {
 	}
 
 	public void open() {
-		Shell shell = new Shell(getParent(), getStyle());
+		final Shell shell = new Shell(getParent(), getStyle());
 		shell.setText(getText());
 		shell.addDisposeListener(new DisposeListener() {
 			@Override
@@ -132,7 +133,7 @@ public class AboutDialog extends Dialog {
 		createContents(shell);
 		shell.pack();
 		shell.open();
-		Display display = getParent().getDisplay();
+		final Display display = getParent().getDisplay();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
