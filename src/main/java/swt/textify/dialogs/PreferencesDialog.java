@@ -4,8 +4,6 @@
 package swt.textify.dialogs;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
@@ -114,11 +112,6 @@ public class PreferencesDialog extends Dialog {
 		gridLayout.marginWidth = 25;
 		gridLayout.marginHeight = 25;
 		shell.setLayout(gridLayout);
-		shell.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-			}
-		});
 
 		createContents(shell);
 		shell.setSize(600, 230);

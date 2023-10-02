@@ -13,8 +13,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -121,13 +119,10 @@ public class AboutDialog extends Dialog {
 	public void open() {
 		final Shell shell = new Shell(getParent(), getStyle());
 		shell.setText(getText());
-		shell.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (programmerImage != null) {
-					programmerImage.dispose();
-					programmerImage = null;
-				}
+		shell.addDisposeListener(e -> {
+			if (programmerImage != null) {
+				programmerImage.dispose();
+				programmerImage = null;
 			}
 		});
 		createContents(shell);

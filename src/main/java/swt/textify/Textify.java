@@ -18,8 +18,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -50,6 +48,7 @@ import swt.textify.preferences.PreferenceProvider;
  */
 public class Textify {
 
+	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private Shell shell;
 	private Text text;
 	private Image newImage;
@@ -75,10 +74,8 @@ public class Textify {
 		// preferences
 		prefs = new PreferenceProvider();
 
-		// set size of shell from prefs
-		final int savedWidth = Integer.parseInt(prefs.getProperty("shell.width", String.valueOf(800)));
-		final int savedHeight = Integer.parseInt(prefs.getProperty("shell.height", String.valueOf(600)));
-		shell.setSize(savedWidth, savedHeight);
+		setShellSize();
+
 		shell.addDisposeListener(e -> {
 			// save shell size to prefs
 			final Point size = shell.getSize();
@@ -90,7 +87,7 @@ public class Textify {
 			if (textChanged) {
 				final MessageBox box = new MessageBox(shell, SWT.NO | SWT.YES | SWT.ICON_QUESTION);
 				box.setText("Save");
-				box.setMessage("The text has been modified. Would you like to save it?");
+				box.setMessage(SAVE_PROMPT);
 				if (box.open() == SWT.YES) {
 					save();
 				}
@@ -103,189 +100,12 @@ public class Textify {
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
 
-		// left toolbar
-		final ToolBar toolBarLeft = new ToolBar(shell, SWT.NONE);
-		GridData gridData = new GridData(GridData.FILL, GridData.FILL, false, false);
-		toolBarLeft.setLayoutData(gridData);
-		Rectangle clientArea = shell.getClientArea();
-		toolBarLeft.setLocation(clientArea.x, clientArea.y);
+		createLeftToolbar();
+		createRightToolbar();
+		createScrollingText();
+		createStatusbar();
 
-		// New
-		final ToolItem newItem = new ToolItem(toolBarLeft, SWT.NONE);
-		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		InputStream in = Textify.class.getResourceAsStream("/images/new.png");
-		newImage = new Image(display, in);
-		newItem.setImage(newImage);
-		newItem.setToolTipText("Start a new document");
-		newItem.addListener(SWT.Selection, event -> {
-			newFile();
-		});
-
-		// Open
-		final ToolItem openItem = new ToolItem(toolBarLeft, SWT.NONE);
-		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/images/open.png");
-		openImage = new Image(display, in);
-		openItem.setImage(openImage);
-		openItem.setToolTipText("Open an existing document");
-		openItem.addListener(SWT.Selection, event -> openFile());
-
-		// Save
-		final ToolItem saveItem = new ToolItem(toolBarLeft, SWT.NONE);
-		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/images/save.png");
-		saveImage = new Image(display, in);
-		saveItem.setToolTipText("Save current document to file");
-		saveItem.setImage(saveImage);
-		saveItem.addListener(SWT.Selection, event -> save());
-
-		// Save As
-		final ToolItem saveAsItem = new ToolItem(toolBarLeft, SWT.NONE);
-		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		in = Textify.class.getResourceAsStream("/images/save-as.png");
-		saveAsImage = new Image(display, in);
-		saveAsItem.setImage(saveAsImage);
-		saveAsItem.setToolTipText("Save current document as new file");
-		saveAsItem.addListener(SWT.Selection, event -> saveAs());
-
-		// right toolbar
-		final ToolBar toolBarRight = new ToolBar(shell, SWT.NONE);
-		gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		toolBarRight.setLayoutData(gridData);
-		clientArea = shell.getClientArea();
-		toolBarRight.setLocation(clientArea.x, clientArea.y);
-
-		// menu for hamburger button
-		final Menu menu = new Menu(shell, SWT.POP_UP);
-
-		// Preferences
-		MenuItem prefsItem = new MenuItem(menu, SWT.PUSH);
-		prefsItem.setText("Preferences");
-		prefsItem.addListener(SWT.Selection, event -> {
-			new PreferencesDialog(shell, prefs).open();
-			try {
-				final Font font = getFont(prefs, display);
-				text.setFont(font);
-				font.dispose();
-			} catch (FontException e1) {
-				showError(e1.getMessage());
-			}
-		});
-
-		// About menu
-		MenuItem aboutItem = new MenuItem(menu, SWT.PUSH);
-		aboutItem.setText("About");
-		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(shell).open());
-
-		// hamburger
-		final ToolItem item = new ToolItem(toolBarRight, SWT.NONE);
-		in = Textify.class.getResourceAsStream("/images/hamburger.png");
-		hamburgerImage = new Image(display, in);
-		item.setImage(hamburgerImage);
-		item.addListener(SWT.Selection, event -> {
-			Rectangle rect = item.getBounds();
-			Point pt = new Point(rect.x, rect.y + rect.height);
-			pt = toolBarRight.toDisplay(pt);
-			menu.setLocation(pt.x, pt.y);
-			menu.setVisible(true);
-		});
-		toolBarRight.pack();
-
-		// scroller
-		ScrolledComposite scrolledComposite = new ScrolledComposite(shell, SWT.V_SCROLL | SWT.BORDER);
-		gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
-		scrolledComposite.setLayoutData(gridData);
-
-		// text
-		text = new Text(scrolledComposite, SWT.BORDER | SWT.MULTI | SWT.WRAP);
-		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
-		text.setLayoutData(gridData);
-		text.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				textChanged = true;
-				shell.setText("* " + shell.getText().replace("* ", ""));
-				numCharsLabel.setText(text.getCharCount() + " chars");
-				statusbar.layout(true);
-			}
-		});
-		text.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if ((e.stateMask & SWT.CTRL) != 0) {
-					if (e.keyCode == 115) { // ctrl+s
-						save();
-					} else if (e.keyCode == 119) { // ctrl+w
-						shell.close();
-					}
-				}
-				super.keyReleased(e);
-			}
-		});
-		try {
-			final Font font = getFont(prefs, display);
-			text.setFont(font);
-			font.dispose();
-		} catch (FontException e1) {
-			showError(e1.getMessage());
-		}
-
-		// finish scrollbar init
-		scrolledComposite.setContent(text);
-		scrolledComposite.setExpandVertical(true);
-		scrolledComposite.setExpandHorizontal(true);
-		scrolledComposite.addControlListener(new ControlAdapter() {
-			@Override
-			public void controlResized(ControlEvent e) {
-				Rectangle r = scrolledComposite.getClientArea();
-				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
-			}
-		});
-
-		// statusbar
-		statusbar = new Composite(shell, SWT.NONE);
-		gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-		gridData.heightHint = 20;
-		statusbar.setLayoutData(gridData);
-		gridLayout = new GridLayout(2, false);
-		statusbar.setLayout(gridLayout);
-
-		// filename label
-		filenameLabel = new Label(statusbar, SWT.NONE);
-		gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		filenameLabel.setLayoutData(gridData);
-
-		// # chars
-		numCharsLabel = new Label(statusbar, SWT.NONE);
-		numCharsLabel.setText("0 chars");
-		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
-		numCharsLabel.setLayoutData(gridData);
-
-		// handle cli arg
-		if (args.length > 1) {
-			String message = "Expected at most one argument, a file, but received: " + args.length;
-			System.err.println(message);
-			showError(message);
-		}
-		if (args.length == 1) {
-			// file received
-			System.out.println("File received: " + args[0]);
-			File file = new File(args[0]);
-			if (!file.exists()) {
-				try {
-					System.out.println("File does not exist - creating it...");
-					file.createNewFile();
-					System.out.println("File created - loading...");
-					loadFile(file);
-				} catch (IOException e1) {
-					final String message = "Error loading file:\n" + e1.getMessage();
-					System.err.println(message);
-					showError(message);
-				}
-			} else {
-				loadFile(file);
-			}
-		}
+		handleCliArgs(args);
 
 		text.setFocus();
 
@@ -319,9 +139,189 @@ public class Textify {
 		}
 		// check charset
 		Charset charset = Charset.defaultCharset();
-		if (!charset.equals(Charset.forName("UTF-8"))) {
+		if (!charset.equals(StandardCharsets.UTF_8)) {
 			throw new IllegalArgumentException("File is not UTF-8: " + charset);
 		}
+	}
+
+	/**
+	 * Clears text widget and sets appropriate labels.
+	 */
+	private void clear() {
+		text.setText("");
+		currentFile = null;
+		textChanged = false;
+		filenameLabel.setText("");
+		numCharsLabel.setText("0 chars");
+		shell.setText("textify");
+	}
+
+	/**
+	 * Create a toolbar with buttons aligned left.
+	 */
+	private void createLeftToolbar() {
+		// left toolbar
+		final ToolBar toolBarLeft = new ToolBar(shell, SWT.NONE);
+		GridData gridData = new GridData(GridData.FILL, GridData.FILL, false, false);
+		toolBarLeft.setLayoutData(gridData);
+		Rectangle clientArea = shell.getClientArea();
+		toolBarLeft.setLocation(clientArea.x, clientArea.y);
+
+		// New
+		final ToolItem newItem = new ToolItem(toolBarLeft, SWT.NONE);
+		InputStream in = Textify.class.getResourceAsStream("/images/new.png");
+		newImage = new Image(shell.getDisplay(), in);
+		newItem.setImage(newImage);
+		newItem.setToolTipText("Start a new document");
+		newItem.addListener(SWT.Selection, event -> newFile());
+
+		// Open
+		final ToolItem openItem = new ToolItem(toolBarLeft, SWT.NONE);
+		in = Textify.class.getResourceAsStream("/images/open.png");
+		openImage = new Image(shell.getDisplay(), in);
+		openItem.setImage(openImage);
+		openItem.setToolTipText("Open an existing document");
+		openItem.addListener(SWT.Selection, event -> openFile());
+
+		// Save
+		final ToolItem saveItem = new ToolItem(toolBarLeft, SWT.NONE);
+		in = Textify.class.getResourceAsStream("/images/save.png");
+		saveImage = new Image(shell.getDisplay(), in);
+		saveItem.setToolTipText("Save current document to file");
+		saveItem.setImage(saveImage);
+		saveItem.addListener(SWT.Selection, event -> save());
+
+		// Save As
+		final ToolItem saveAsItem = new ToolItem(toolBarLeft, SWT.NONE);
+		in = Textify.class.getResourceAsStream("/images/save-as.png");
+		saveAsImage = new Image(shell.getDisplay(), in);
+		saveAsItem.setImage(saveAsImage);
+		saveAsItem.setToolTipText("Save current document as new file");
+		saveAsItem.addListener(SWT.Selection, event -> saveAs());
+	}
+
+	/**
+	 * Create a toolbar with buttons aligned right.
+	 */
+	private void createRightToolbar() {
+		// right toolbar
+		final ToolBar toolBarRight = new ToolBar(shell, SWT.NONE);
+		GridData gridData = new GridData(GridData.END, GridData.FILL, true, false);
+		toolBarRight.setLayoutData(gridData);
+		Rectangle clientArea = shell.getClientArea();
+		toolBarRight.setLocation(clientArea.x, clientArea.y);
+
+		// menu for hamburger button
+		final Menu menu = new Menu(shell, SWT.POP_UP);
+
+		// Preferences
+		MenuItem prefsItem = new MenuItem(menu, SWT.PUSH);
+		prefsItem.setText("Preferences");
+		prefsItem.addListener(SWT.Selection, event -> {
+			new PreferencesDialog(shell, prefs).open();
+			try {
+				final Font font = getFont(prefs, shell.getDisplay());
+				text.setFont(font);
+				font.dispose();
+			} catch (FontException e1) {
+				showError(e1.getMessage());
+			}
+		});
+
+		// About menu
+		MenuItem aboutItem = new MenuItem(menu, SWT.PUSH);
+		aboutItem.setText("About");
+		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(shell).open());
+
+		// hamburger
+		final ToolItem item = new ToolItem(toolBarRight, SWT.NONE);
+		InputStream in = Textify.class.getResourceAsStream("/images/hamburger.png");
+		hamburgerImage = new Image(shell.getDisplay(), in);
+		item.setImage(hamburgerImage);
+		item.addListener(SWT.Selection, event -> {
+			Rectangle rect = item.getBounds();
+			Point pt = new Point(rect.x, rect.y + rect.height);
+			pt = toolBarRight.toDisplay(pt);
+			menu.setLocation(pt.x, pt.y);
+			menu.setVisible(true);
+		});
+		toolBarRight.pack();
+	}
+
+	/**
+	 * Create a text widget inside a scroller.
+	 */
+	private void createScrollingText() {
+		// scroller
+		ScrolledComposite scrolledComposite = new ScrolledComposite(shell, SWT.V_SCROLL | SWT.BORDER);
+		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
+		scrolledComposite.setLayoutData(gridData);
+
+		// text
+		text = new Text(scrolledComposite, SWT.BORDER | SWT.MULTI | SWT.WRAP);
+		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
+		text.setLayoutData(gridData);
+		text.addModifyListener(e -> {
+			textChanged = true;
+			shell.setText("* " + shell.getText().replace("* ", ""));
+			numCharsLabel.setText(text.getCharCount() + " chars");
+			statusbar.layout(true);
+		});
+		text.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if ((e.stateMask & SWT.CTRL) != 0) {
+					if (e.keyCode == 115) { // ctrl+s
+						save();
+					} else if (e.keyCode == 119) { // ctrl+w
+						shell.close();
+					}
+				}
+				super.keyReleased(e);
+			}
+		});
+		try {
+			final Font font = getFont(prefs, shell.getDisplay());
+			text.setFont(font);
+			font.dispose();
+		} catch (FontException e1) {
+			showError(e1.getMessage());
+		}
+
+		// finish scrollbar init
+		scrolledComposite.setContent(text);
+		scrolledComposite.setExpandVertical(true);
+		scrolledComposite.setExpandHorizontal(true);
+		scrolledComposite.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				Rectangle r = scrolledComposite.getClientArea();
+				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
+			}
+		});
+	}
+
+	/**
+	 * Create statusbar with labels.
+	 */
+	private void createStatusbar() {
+		// statusbar
+		statusbar = new Composite(shell, SWT.NONE);
+		GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
+		statusbar.setLayoutData(gridData);
+		GridLayout gridLayout = new GridLayout(2, false);
+		statusbar.setLayout(gridLayout);
+
+		// filename label
+		filenameLabel = new Label(statusbar, SWT.NONE);
+		gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		filenameLabel.setLayoutData(gridData);
+
+		// # chars
+		numCharsLabel = new Label(statusbar, SWT.NONE);
+		numCharsLabel.setText("0 chars");
+		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
+		numCharsLabel.setLayoutData(gridData);
 	}
 
 	/**
@@ -352,7 +352,7 @@ public class Textify {
 
 	/**
 	 * Get the font from preferences. The caller is responsible for disposing of it.
-	 * 
+	 *
 	 * @param prefs   {@link PreferenceProvider}
 	 * @param display {@link Display}
 	 * @return {@link Font}
@@ -369,6 +369,40 @@ public class Textify {
 		return new Font(display, fontData);
 	}
 
+	private void handleCliArgs(String[] args) {
+		// handle cli arg
+		if (args.length > 1) {
+			String message = "Expected at most one argument, a file, but received: " + args.length;
+			System.err.println(message);
+			showError(message);
+		}
+		if (args.length == 1) {
+			// file received
+			System.out.println("File received: " + args[0]);
+			File file = new File(args[0]);
+			if (!file.exists()) {
+				try {
+					System.out.println("File does not exist - creating it...");
+					boolean created = file.createNewFile();
+					if (!created) {
+						final String message = "Unknown error creating file.";
+						System.err.println(message);
+						showError(message);
+					} else {
+						System.out.println("File created - loading...");
+						loadFile(file);
+					}
+				} catch (IOException e1) {
+					final String message = "Error loading file:\n" + e1.getMessage();
+					System.err.println(message);
+					showError(message);
+				}
+			} else {
+				loadFile(file);
+			}
+		}
+	}
+
 	/**
 	 * Determines if provided mimeType is text-based.
 	 *
@@ -382,7 +416,7 @@ public class Textify {
 
 	/**
 	 * Load the contents of the provided file into the text widget.
-	 * 
+	 *
 	 * @param file {@link File}
 	 */
 	private void loadFile(File file) {
@@ -413,32 +447,14 @@ public class Textify {
 		if (textChanged) {
 			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
-			box.setMessage("The text has been modified. Would you like to save it?");
+			box.setMessage(SAVE_PROMPT);
 			int result = box.open();
-			if (result == SWT.CANCEL) {
-				return;
-			} else if (result == SWT.NO) {
+			if (result == SWT.NO || (result == SWT.YES && save())) {
 				clear();
-			} else if (result == SWT.YES) {
-				if (save()) {
-					clear();
-				}
 			}
 		} else {
 			clear();
 		}
-	}
-
-	/**
-	 * Clears text widget and sets appropriate labels.
-	 */
-	private void clear() {
-		text.setText("");
-		currentFile = null;
-		textChanged = false;
-		filenameLabel.setText("");
-		numCharsLabel.setText("0 chars");
-		shell.setText("textify");
 	}
 
 	/**
@@ -449,7 +465,7 @@ public class Textify {
 			// prompt user to save
 			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
-			box.setMessage("The text has been modified. Would you like to save it?");
+			box.setMessage(SAVE_PROMPT);
 			int result = box.open();
 			if (result == SWT.CANCEL) {
 				return;
@@ -561,8 +577,17 @@ public class Textify {
 	}
 
 	/**
+	 * Set size of shell from prefs.
+	 */
+	private void setShellSize() {
+		final int savedWidth = Integer.parseInt(prefs.getProperty("shell.width", String.valueOf(800)));
+		final int savedHeight = Integer.parseInt(prefs.getProperty("shell.height", String.valueOf(600)));
+		shell.setSize(savedWidth, savedHeight);
+	}
+
+	/**
 	 * Display an error message to the user.
-	 * 
+	 *
 	 * @param string {@link String}
 	 */
 	private void showError(String string) {

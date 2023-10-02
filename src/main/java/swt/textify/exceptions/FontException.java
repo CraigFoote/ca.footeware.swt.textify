@@ -1,10 +1,10 @@
 /**
- * 
+ *
  */
 package swt.textify.exceptions;
 
 /**
- * 
+ *
  */
 public class FontException extends Exception {
 
@@ -14,11 +14,11 @@ public class FontException extends Exception {
 		super(message);
 	}
 
-	public FontException(Throwable t) {
-		super(t);
-	}
-
 	public FontException(String message, Throwable t) {
 		super(message, t);
+	}
+
+	public FontException(Throwable t) {
+		super(t);
 	}
 }

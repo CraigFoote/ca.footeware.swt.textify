@@ -13,6 +13,10 @@ import swt.textify.exceptions.FontException;
  */
 public class FontUtils {
 
+	public static FontData getDefaultFontData() {
+		return new FontData("sans", 14, SWT.NORMAL);
+	}
+
 	public static String getDisplayText(FontData fontData) {
 		if (fontData != null) {
 			return fontData.getName() + " " + fontData.getHeight() + " " + getStyleName(fontData.getStyle());
@@ -50,7 +54,6 @@ public class FontUtils {
 		}
 	}
 
-	public static FontData getDefaultFontData() {
-		return new FontData("sans", 14, SWT.NORMAL);
+	private FontUtils() {
 	}
 }

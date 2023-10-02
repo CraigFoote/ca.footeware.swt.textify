@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
 import java.util.Properties;
 
 /**
@@ -42,9 +44,14 @@ public class PreferenceProvider {
 			prefsPath = folderLocation + "textify.properties";
 			final File file = new File(prefsPath);
 			if (!file.exists()) {
-				file.createNewFile();
+				boolean propsCreated = file.createNewFile();
+				if (!propsCreated) {
+					throw new IllegalArgumentException("An error occurred creating file.");
+				}
 			} else {
-				this.props.load(new FileInputStream(file));
+				try (InputStream in = new FileInputStream(file)) {
+					this.props.load(in);
+				}
 			}
 		} catch (IOException e) {
 			System.err.println("Preferences are disabled (" + prefsPath + "): " + e.getMessage());
@@ -52,8 +59,8 @@ public class PreferenceProvider {
 	}
 
 	public void save() {
-		try {
-			this.props.store(new FileWriter(prefsPath), null);
+		try (Writer writer = new FileWriter(prefsPath)) {
+			this.props.store(writer, null);
 		} catch (IOException e) {
 			System.err.println("Error saving preferences: " + e.getMessage());
 		}
