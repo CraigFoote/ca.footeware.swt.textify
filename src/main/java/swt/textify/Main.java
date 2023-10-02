@@ -18,7 +18,7 @@ public class Main {
 	 * @param args {@link String}[]
 	 */
 	public static void main(String[] args) {
-		LOGGER.log(Level.INFO, "Starting textify.");
+		LOGGER.log(Level.DEBUG, "Starting textify.");
 		new Textify(args);
 	}
 }

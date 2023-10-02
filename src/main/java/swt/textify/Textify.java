@@ -21,6 +21,7 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -66,6 +67,7 @@ public class Textify {
 	private Composite statusbar;
 	private Label filenameLabel;
 	private Label numCharsLabel;
+	private Cursor cursor;
 
 	/**
 	 * Constructor.
@@ -75,6 +77,8 @@ public class Textify {
 		final Display display = new Display();
 		shell = new Shell(display);
 		shell.setText("textify");
+		cursor = new Cursor(display, SWT.CURSOR_ARROW);
+		shell.setCursor(cursor);
 
 		// preferences
 		LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
@@ -362,6 +366,10 @@ public class Textify {
 		if (hamburgerImage != null) {
 			hamburgerImage.dispose();
 			hamburgerImage = null;
+		}
+		if (cursor != null) {
+			cursor.dispose();
+			cursor = null;
 		}
 	}
 
