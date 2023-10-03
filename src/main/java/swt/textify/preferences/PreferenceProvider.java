@@ -72,7 +72,6 @@ public class PreferenceProvider {
 	}
 
 	public void setProperty(String key, String value) {
-		String message = "Saving preference: " + key + "=" + value;
 		this.props.setProperty(key, value);
 	}
 }
