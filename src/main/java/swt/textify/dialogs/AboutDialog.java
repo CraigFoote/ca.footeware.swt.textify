@@ -60,10 +60,14 @@ public class AboutDialog extends Dialog {
 			public void widgetSelected(SelectionEvent e) {
 				final String url = e.text;
 				if (Desktop.isDesktopSupported()) {
+					LOGGER.log(Level.DEBUG, "Getting Desktop.");
 					final Desktop desktop = Desktop.getDesktop();
 					try {
+						LOGGER.log(Level.DEBUG, "Creating URI from String: {0}", url);
 						final URI uri = new URI(url);
+						LOGGER.log(Level.DEBUG, "About to Browse URI.");
 						desktop.browse(uri);
+						LOGGER.log(Level.DEBUG, "After Browse URI.");
 					} catch (IOException | URISyntaxException ex) {
 						LOGGER.log(Level.ERROR, "Error opening URL {0}: {1}", url, ex.getMessage());
 					} catch (Exception ex) {

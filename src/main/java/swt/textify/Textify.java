@@ -73,24 +73,25 @@ public class Textify {
 	 * Constructor.
 	 */
 	public Textify(String[] args) {
-		LOGGER.log(Level.DEBUG, "Constructing Textify.");
+		LOGGER.log(Level.DEBUG, "Constructing Display.");
 		final Display display = new Display();
+		LOGGER.log(Level.DEBUG, "Constructing Shell.");
 		shell = new Shell(display);
+		LOGGER.log(Level.DEBUG, "Setting shell text.");
 		shell.setText("textify");
+		LOGGER.log(Level.DEBUG, "Constructing Cursor.");
 		cursor = new Cursor(display, SWT.CURSOR_ARROW);
+		LOGGER.log(Level.DEBUG, "Setting cursor.");
 		shell.setCursor(cursor);
 
 		// preferences
 		LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
 		prefs = new PreferenceProvider();
 
-		LOGGER.log(Level.DEBUG, "Setting shell size.");
 		setShellSize();
 
-		LOGGER.log(Level.DEBUG, "Adding DisposeListener.");
 		shell.addDisposeListener(e -> {
 			// save shell size to prefs
-			LOGGER.log(Level.DEBUG, "Saving shell size as pref.");
 			final Point size = shell.getSize();
 			prefs.setProperty("shell.width", String.valueOf(size.x));
 			prefs.setProperty("shell.height", String.valueOf(size.y));
@@ -107,25 +108,21 @@ public class Textify {
 			}
 
 			// dispose of images
-			LOGGER.log(Level.DEBUG, "Disposing images.");
 			dispose();
 		});
 
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
 
-		LOGGER.log(Level.DEBUG, "Creating toolbar.");
 		createLeftToolbar();
 		createRightToolbar();
 		createScrollingText();
 		createStatusbar();
 
-		LOGGER.log(Level.DEBUG, "Handling CLI args.");
 		handleCliArgs(args);
 
 		text.setFocus();
 
-		LOGGER.log(Level.DEBUG, "Opening Shell.");
 		shell.open();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
@@ -134,7 +131,6 @@ public class Textify {
 		}
 
 		// disposes all associated windows and their components
-		LOGGER.log(Level.DEBUG, "Disposing.");
 		display.dispose();
 		LOGGER.log(Level.DEBUG, "Application stopping.");
 	}

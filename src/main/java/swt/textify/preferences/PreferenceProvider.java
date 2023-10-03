@@ -28,7 +28,6 @@ public class PreferenceProvider {
 	 * Constructor.
 	 */
 	public PreferenceProvider() {
-		LOGGER.log(Level.DEBUG, "Constructing PreferenceProvider.");
 		this.props = new Properties();
 		init();
 	}
@@ -38,7 +37,6 @@ public class PreferenceProvider {
 	}
 
 	private void init() {
-		LOGGER.log(Level.DEBUG, "Reading prefs.");
 		try {
 			final String name = System.getenv().get("SUDO_USER") != null ? System.getenv().get("SUDO_USER")
 					: System.getProperty("user.name");
@@ -63,7 +61,6 @@ public class PreferenceProvider {
 		} catch (IOException e) {
 			LOGGER.log(Level.ERROR, "Preferences are disabled ({0}): {1}", prefsPath, e.getMessage());
 		}
-		LOGGER.log(Level.DEBUG, "Reading prefs done.");
 	}
 
 	public void save() {
@@ -76,7 +73,6 @@ public class PreferenceProvider {
 
 	public void setProperty(String key, String value) {
 		String message = "Saving preference: " + key + "=" + value;
-		LOGGER.log(Level.DEBUG, message);
 		this.props.setProperty(key, value);
 	}
 }

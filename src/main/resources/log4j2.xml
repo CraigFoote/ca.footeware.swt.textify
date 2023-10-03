@@ -14,7 +14,7 @@
 		<RollingFile name="rollingFile" fileName="${LOG_LOCATION}/swt.textify.log"
 			filePattern="${LOG_LOCATION}/swt.textify-%d{MM-dd-yyyy}-%i.log.gz">
 			<PatternLayout>
-				<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+				<Pattern>${LOG_PATTERN}</Pattern>
 			</PatternLayout>
 
 			<Policies>
