@@ -3,18 +3,13 @@
  */
 package swt.textify.dialogs;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Properties;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -27,6 +22,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
+
+import com.vaadin.open.Open;
 
 /**
  *
@@ -58,24 +55,7 @@ public class AboutDialog extends Dialog {
 		link.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				final String url = e.text;
-				if (Desktop.isDesktopSupported()) {
-					LOGGER.log(Level.DEBUG, "Getting Desktop.");
-					final Desktop desktop = Desktop.getDesktop();
-					try {
-						LOGGER.log(Level.DEBUG, "Creating URI from String: {0}", url);
-						final URI uri = new URI(url);
-						LOGGER.log(Level.DEBUG, "About to Browse URI.");
-						desktop.browse(uri);
-						LOGGER.log(Level.DEBUG, "After Browse URI.");
-					} catch (IOException | URISyntaxException ex) {
-						LOGGER.log(Level.ERROR, "Error opening URL {0}: {1}", url, ex.getMessage());
-					} catch (Exception ex) {
-						LOGGER.log(Level.ERROR, "Weird error opening URL {0}: {1}", url, ex.getMessage());
-					}
-				} else {
-					LOGGER.log(Level.ERROR, "Attempt to open url failed - 'Desktop not supported'.");
-				}
+				Open.open(e.text);
 			}
 		});
 
@@ -87,16 +67,7 @@ public class AboutDialog extends Dialog {
 		versionLink.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				final String url = e.text;
-				if (Desktop.isDesktopSupported()) {
-					final Desktop desktop = Desktop.getDesktop();
-					try {
-						final URI uri = new URI(url);
-						desktop.browse(uri);
-					} catch (IOException | URISyntaxException ex) {
-						// ignore
-					}
-				}
+				Open.open(e.text);
 			}
 		});
 
@@ -117,13 +88,13 @@ public class AboutDialog extends Dialog {
 	}
 
 	private String getVersion() {
-		final InputStream in = AboutDialog.class
-				.getResourceAsStream("/META-INF/maven/ca.footeware/swt.textify/pom.xml");
+		InputStream in = AboutDialog.class.getClassLoader().getResourceAsStream("version.properties");
 		try {
-			final MavenXpp3Reader reader = new MavenXpp3Reader();
-			final Model model = reader.read(in);
-			return model.getVersion();
-		} catch (IOException | XmlPullParserException e) {
+			Properties props = new Properties();
+			props.load(in);
+			return props.getProperty("version");
+		} catch (IOException e) {
+			LOGGER.log(Level.ERROR, "An error occurred getting app version.", e);
 			return e.getMessage();
 		}
 	}

@@ -59,7 +59,7 @@ public class PreferenceProvider {
 				}
 			}
 		} catch (IOException e) {
-			LOGGER.log(Level.ERROR, "Preferences are disabled ({0}): {1}", prefsPath, e.getMessage());
+			LOGGER.log(Level.ERROR, "Preferences are disabled ({0}).", prefsPath, e);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class PreferenceProvider {
 		try (Writer writer = new FileWriter(prefsPath)) {
 			this.props.store(writer, null);
 		} catch (IOException e) {
-			LOGGER.log(Level.ERROR, "Error saving preferences: {0}", e.getMessage());
+			LOGGER.log(Level.ERROR, "Error saving preferences.", e);
 		}
 	}
 

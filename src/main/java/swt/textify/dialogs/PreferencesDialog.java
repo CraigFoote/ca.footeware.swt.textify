@@ -62,7 +62,7 @@ public class PreferencesDialog extends Dialog {
 			fontLabel.setText(FontUtils.getDisplayText(fontData));
 			font.dispose();
 		} catch (FontException e) {
-			LOGGER.log(Level.ERROR, e.getMessage());
+			LOGGER.log(Level.ERROR, e);
 		}
 
 		// font button
@@ -76,7 +76,7 @@ public class PreferencesDialog extends Dialog {
 				try {
 					dialog.setFontList(new FontData[] { FontUtils.getFontData(fontProperty) });
 				} catch (FontException e1) {
-					LOGGER.log(Level.ERROR, e1.getMessage());
+					LOGGER.log(Level.ERROR, e1);
 				}
 				FontData fontData = dialog.open();
 				if (fontData != null) {

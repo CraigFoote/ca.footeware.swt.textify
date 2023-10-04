@@ -2,8 +2,9 @@
 <Configuration status="warn" name="swt.textify">
 
 	<Properties>
-		<Property name="LOG_LOCATION">$${env:HOME}/.local/share/textify/logs/</Property>
-		<Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %p %m%n</Property>
+		<Property name="LOG_LOCATION">$${env:HOME}/.local/share/textify/logs/
+		</Property>
+		<Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%-6p] %C{1}.%M(%F:%L) - %m%n</Property>
 	</Properties>
 
 	<Appenders>
@@ -11,7 +12,8 @@
 			<PatternLayout pattern="${LOG_PATTERN}" />
 		</Console>
 
-		<RollingFile name="rollingFile" fileName="${LOG_LOCATION}/swt.textify.log"
+		<RollingFile name="rollingFile"
+			fileName="${LOG_LOCATION}/swt.textify.log"
 			filePattern="${LOG_LOCATION}/swt.textify-%d{MM-dd-yyyy}-%i.log.gz">
 			<PatternLayout>
 				<Pattern>${LOG_PATTERN}</Pattern>

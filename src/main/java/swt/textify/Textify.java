@@ -74,7 +74,7 @@ public class Textify {
 	 */
 	public Textify(String[] args) {
 		LOGGER.log(Level.DEBUG, "Constructing Display.");
-		final Display display = new Display();
+		final Display display = Display.getDefault();
 		LOGGER.log(Level.DEBUG, "Constructing Shell.");
 		shell = new Shell(display);
 		LOGGER.log(Level.DEBUG, "Setting shell text.");
