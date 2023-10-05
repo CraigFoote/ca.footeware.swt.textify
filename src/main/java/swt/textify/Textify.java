@@ -73,16 +73,17 @@ public class Textify {
 	 * Constructor.
 	 */
 	public Textify(String[] args) {
-		LOGGER.log(Level.DEBUG, "Constructing Display.");
 		final Display display = Display.getDefault();
-		LOGGER.log(Level.DEBUG, "Constructing Shell.");
 		shell = new Shell(display);
-		LOGGER.log(Level.DEBUG, "Setting shell text.");
 		shell.setText("textify");
-		LOGGER.log(Level.DEBUG, "Constructing Cursor.");
-		cursor = new Cursor(display, SWT.CURSOR_ARROW);
-		LOGGER.log(Level.DEBUG, "Setting cursor.");
-		shell.setCursor(cursor);
+		LOGGER.log(Level.DEBUG, "Scheduling cursor update.");
+		Display.getDefault().asyncExec(() -> {
+			LOGGER.log(Level.DEBUG, "Constructing Cursor.");
+			cursor = new Cursor(display, SWT.CURSOR_ARROW);
+			LOGGER.log(Level.DEBUG, "Setting cursor.");
+			shell.setCursor(cursor);
+			LOGGER.log(Level.DEBUG, "Done setting cursor.");
+		});
 
 		// preferences
 		LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
@@ -122,6 +123,7 @@ public class Textify {
 		handleCliArgs(args);
 
 		text.setFocus();
+		LOGGER.log(Level.DEBUG, "Done constructing Textify.");
 
 		shell.open();
 		while (!shell.isDisposed()) {

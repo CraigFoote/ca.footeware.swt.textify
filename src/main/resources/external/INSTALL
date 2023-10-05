@@ -2,73 +2,48 @@
 
 IFS=''
 
-prompt () {
-	read -r -p "Press 'Enter' to continue or 'q' to quit: " key
-	if [[ $key == q ]]
-	then
-		exit 0
-	elif [[ $key == "" ]] #enter
-	then
-		eval $1
-	fi
-}
-
 echo  --------------------------------
 echo "Welcome to the textify installer"
 echo  --------------------------------
 # remove really old installs
-echo -e "\e[1;31m Removing really old installations... \e[0m"
-echo -e "\e[1;32m sudo rm -f /usr/local/bin/textify-*.jar \e[0m"
-prompt "sudo rm -f /usr/local/bin/textify-*.jar"
-echo -e "\e[1;32m sudo rm -f /usr/local/bin/textify \e[0m"
-prompt "sudo rm -f /usr/local/bin/textify"
-echo -e "\e[1;32m sudo rm -f /usr/share/icons/hicolor/scalable/apps/textify.svg \e[0m"
-prompt "sudo rm -f /usr/share/icons/hicolor/scalable/apps/textify.svg"
+echo -e "\e[1;32m Removing really old installations... \e[0m"
+sudo rm -f /usr/local/bin/textify-*.jar
+sudo rm -f /usr/local/bin/textify
+rm -f /usr/share/icons/hicolor/scalable/apps/textify.svg
 echo
 # remove previous install
-echo -e "\e[1;31m Removing previous installation... \e[0m"
-echo -e "\e[1;32m rm -f $HOME/.local/share/applications/textify.desktop \e[0m"
-prompt "rm -f $HOME/.local/share/applications/textify.desktop"
-echo -e "\e[1;32m rm -f $HOME/.local/share/textify/swt.textify-*.jar \e[0m"
-prompt "rm -f $HOME/.local/share/textify/swt.textify-*.jar"
-echo -e "\e[1;32m rm -f $HOME/.local/bin/textify \e[0m"
-prompt "rm -f $HOME/.local/bin/textify"
+echo -e "\e[1;32m Removing previous installation... \e[0m"
+rm -f $HOME/.local/share/textify/swt.textify-*.jar
+rm -f $HOME/.local/bin/textify
+rm -f $HOME/.local/share/applications/textify.desktop
 echo
 # install new stuff
-echo -e "\e[1;31m Creating install folders... \e[0m"
-echo -e "\e[1;32m mkdir -p $HOME/.local/share/textify/ \e[0m"
-prompt "mkdir -p $HOME/.local/share/textify/"
-echo -e "\e[1;32m mkdir -p $HOME/.local/bin/ \e[0m"
-prompt "mkdir -p $HOME/.local/bin/"
+echo -e "\e[1;32m Creating install folders... \e[0m"
+mkdir -p $HOME/.local/bin/
+mkdir -p $HOME/.local/share/textify/
 echo
 # add to path
-echo -e "\e[1;31m Adding $HOME/.local/bin to PATH \e[0m"
-echo -e '\e[1;32m export PATH=$PATH:$HOME/.local/bin/ \e[0m'
-prompt "export PATH=$HOME/.local/bin/:$PATH"
+echo -e "\e[1;32m Adding $HOME/.local/bin to PATH \e[0m"
+export PATH=$HOME/.local/bin/:$PATH
 echo
 # copy jar
-echo -e "\e[1;31m Copying current release jar to system... \e[0m"
-echo -e "\e[1;32m cp install-files/swt.textify-*.jar $HOME/.local/share/textify/ \e[0m"
-prompt "cp install-files/swt.textify-*.jar $HOME/.local/share/textify/"
+echo -e "\e[1;32m Copying current release jar to system... \e[0m"
+cp install-files/swt.textify-*.jar $HOME/.local/share/textify/
 echo
 # copy icon
-echo -e "\e[1;31m Copying icon to system... \e[0m"
-echo -e "\e[1;32m sudo cp install-files/textify.svg /usr/share/icons/hicolor/scalable/apps/ \e[0m"
-prompt "sudo cp install-files/textify.svg /usr/share/icons/hicolor/scalable/apps/"
+echo -e "\e[1;32m Copying icon to system... \e[0m"
+sudo cp install-files/textify.svg /usr/share/icons/hicolor/scalable/apps/
 echo
 # make launcher executable 
-echo -e "\e[1;31m Making launcher executable... \e[0m"
-echo -e "\e[1;32m chmod +x install-files/textify \e[0m"
-prompt "chmod +x install-files/textify"
+echo -e "\e[1;32m Making launcher executable... \e[0m"
+chmod +x install-files/textify
 echo
 # copy launcher
-echo -e "\e[1;31m Copying launcher to system... \e[0m"
-echo -e "\e[1;32m cp install-files/textify $HOME/.local/bin/ \e[0m"
-prompt "cp install-files/textify $HOME/.local/bin/"
+echo -e "\e[1;32m Copying launcher to system... \e[0m"
+cp install-files/textify $HOME/.local/bin/
 echo
 # copy .desktop
-echo -e "\e[1;31m Copying .desktop file to system... \e[0m"
-echo -e "\e[1;32m cp install-files/textify.desktop $HOME/.local/share/applications/ \e[0m"
-prompt "cp install-files/textify.desktop $HOME/.local/share/applications/"
+echo -e "\e[1;32m Copying .desktop file to system... \e[0m"
+cp install-files/textify.desktop $HOME/.local/share/applications/
 echo
-echo -e "\e[1;31m Done :) \e[0m"
+echo -e "\e[1;32m Done :) \e[0m"
