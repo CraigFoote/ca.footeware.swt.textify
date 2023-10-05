@@ -528,6 +528,8 @@ public class Textify {
 					} else if (result == SWT.YES) {
 						write = true;
 					}
+				} else {
+					write = true;
 				}
 			}
 		}
