@@ -102,21 +102,25 @@ public class Textify {
 
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
-		LOGGER.log(Level.DEBUG, "Creating toolbars and text widgets.");
+		LOGGER.log(Level.DEBUG, "Creating left toolbar");
 		createLeftToolbar();
+		LOGGER.log(Level.DEBUG, "Creating right toolbar");
 		createRightToolbar();
+		LOGGER.log(Level.DEBUG, "Creating scrolling Text");
 		createScrollingText();
+		LOGGER.log(Level.DEBUG, "Creating statusbar");
 		createStatusbar();
-
+		LOGGER.log(Level.DEBUG, "Handling args");
 		handleCliArgs(args);
-
-		text.setFocus();
 
 		LOGGER.log(Level.DEBUG, "Opening Shell.");
 		shell.open();
 
+		LOGGER.log(Level.DEBUG, "Setting focus on Text");
+		text.setFocus();
+
 		// preferences
-		LOGGER.log(Level.DEBUG, "Scheduling preferences...");
+		LOGGER.log(Level.DEBUG, "Scheduling preferences.");
 		Display.getDefault().asyncExec(() -> {
 			LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
 			prefs = new PreferenceProvider();
@@ -244,8 +248,6 @@ public class Textify {
 		final ToolBar toolBarRight = new ToolBar(shell, SWT.NONE);
 		GridData gridData = new GridData(GridData.END, GridData.FILL, true, false);
 		toolBarRight.setLayoutData(gridData);
-		Rectangle clientArea = shell.getClientArea();
-		toolBarRight.setLocation(clientArea.x, clientArea.y);
 
 		// menu for hamburger button
 		final Menu menu = new Menu(shell, SWT.POP_UP);
