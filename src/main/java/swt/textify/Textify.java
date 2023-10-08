@@ -73,23 +73,11 @@ public class Textify {
 	 * Constructor.
 	 */
 	public Textify(String[] args) {
+		LOGGER.log(Level.DEBUG, "Getting display.");
 		final Display display = Display.getDefault();
+		LOGGER.log(Level.DEBUG, "Constructing Shell.");
 		shell = new Shell(display);
 		shell.setText("textify");
-		LOGGER.log(Level.DEBUG, "Scheduling cursor update.");
-		Display.getDefault().asyncExec(() -> {
-			LOGGER.log(Level.DEBUG, "Constructing Cursor.");
-			cursor = new Cursor(display, SWT.CURSOR_ARROW);
-			LOGGER.log(Level.DEBUG, "Setting cursor.");
-			shell.setCursor(cursor);
-			LOGGER.log(Level.DEBUG, "Done setting cursor.");
-		});
-
-		// preferences
-		LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
-		prefs = new PreferenceProvider();
-
-		setShellSize();
 
 		shell.addDisposeListener(e -> {
 			// save shell size to prefs
@@ -114,7 +102,7 @@ public class Textify {
 
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
-
+		LOGGER.log(Level.DEBUG, "Creating toolbars and text widgets.");
 		createLeftToolbar();
 		createRightToolbar();
 		createScrollingText();
@@ -123,9 +111,40 @@ public class Textify {
 		handleCliArgs(args);
 
 		text.setFocus();
-		LOGGER.log(Level.DEBUG, "Done constructing Textify.");
 
+		LOGGER.log(Level.DEBUG, "Opening Shell.");
 		shell.open();
+
+		// preferences
+		LOGGER.log(Level.DEBUG, "Scheduling preferences...");
+		Display.getDefault().asyncExec(() -> {
+			LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
+			prefs = new PreferenceProvider();
+			LOGGER.log(Level.DEBUG, "Setting shell size.");
+			setShellSize();
+			try {
+				LOGGER.log(Level.DEBUG, "Getting font from prefs.");
+				final Font font = getFont(prefs, shell.getDisplay());
+				LOGGER.log(Level.DEBUG, "Setting font.");
+				text.setFont(font);
+				LOGGER.log(Level.DEBUG, "Disposing font...");
+				font.dispose();
+				LOGGER.log(Level.DEBUG, "Font disposed.");
+			} catch (FontException e) {
+				showError(e.getMessage());
+			}
+		});
+
+		LOGGER.log(Level.DEBUG, "Scheduling cursor update.");
+		Display.getDefault().asyncExec(() -> {
+			LOGGER.log(Level.DEBUG, "Constructing Cursor.");
+			cursor = new Cursor(display, SWT.CURSOR_ARROW);
+			LOGGER.log(Level.DEBUG, "Setting cursor.");
+			shell.setCursor(cursor);
+			LOGGER.log(Level.DEBUG, "Done setting cursor.");
+		});
+
+		LOGGER.log(Level.DEBUG, "Done constructing Textify.");
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
 				display.sleep();
@@ -297,13 +316,6 @@ public class Textify {
 				super.keyReleased(e);
 			}
 		});
-		try {
-			final Font font = getFont(prefs, shell.getDisplay());
-			text.setFont(font);
-			font.dispose();
-		} catch (FontException e1) {
-			showError(e1.getMessage());
-		}
 
 		// finish scrollbar init
 		scrolledComposite.setContent(text);
@@ -380,7 +392,7 @@ public class Textify {
 	 * @throws FontException if an error occurs getting FontData from prefs property
 	 */
 	private Font getFont(PreferenceProvider prefs, Display display) throws FontException {
-		String fontProperty = prefs.getProperty("font", null);
+		final String fontProperty = prefs.getProperty("font", null);
 		FontData fontData;
 		if (fontProperty == null) {
 			fontData = new FontData("sans", 14, SWT.NORMAL);
@@ -399,11 +411,11 @@ public class Textify {
 			// file received
 			String message = "File received: " + args[0];
 			LOGGER.log(Level.INFO, message);
-			File file = new File(args[0]);
+			final File file = new File(args[0]);
 			if (!file.exists()) {
 				try {
 					LOGGER.log(Level.INFO, "File does not exist - creating it.");
-					boolean created = file.createNewFile();
+					final boolean created = file.createNewFile();
 					if (!created) {
 						showError("Unknown error creating file.");
 					} else {
@@ -439,8 +451,8 @@ public class Textify {
 		try {
 			checkFile(file);
 			// load contents of file
-			List<String> allLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-			StringBuilder builder = new StringBuilder();
+			final List<String> allLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+			final StringBuilder builder = new StringBuilder();
 			for (String line : allLines) {
 				builder.append(line);
 				builder.append("\n");
@@ -521,13 +533,10 @@ public class Textify {
 				file = new File(chosenPath);
 				if (file.exists()) {
 					// prompt for overwrite
-					final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
-					box.setText("Overwrite");
-					box.setMessage("File exists. Would you like to overwrite it?");
-					int result = box.open();
-					if (result == SWT.CANCEL) {
+					final int overwrite = promptForOverwrite();
+					if (overwrite == SWT.CANCEL) {
 						return false;
-					} else if (result == SWT.YES) {
+					} else if (overwrite == SWT.YES) {
 						write = true;
 					}
 				} else {
@@ -537,18 +546,41 @@ public class Textify {
 		}
 		// do we have everything we need to write file?
 		if (write) {
-			try (FileWriter writer = new FileWriter(file)) {
-				writer.write(text.getText());
-				currentFile = file;
-				textChanged = false;
-				filenameLabel.setText(file.getAbsolutePath());
-				shell.setText(file.getName());
-				return true;
-			} catch (IOException e) {
-				showError(e.getMessage());
-			}
+			return write(file);
 		}
 		return false;
+	}
+
+	/**
+	 * Write file to disk and update UI.
+	 * 
+	 * @param file {@link File}
+	 * @return boolean true if file was written
+	 */
+	private boolean write(File file) {
+		try (FileWriter writer = new FileWriter(file)) {
+			writer.write(text.getText());
+			currentFile = file;
+			textChanged = false;
+			filenameLabel.setText(file.getAbsolutePath());
+			shell.setText(file.getName());
+			return true;
+		} catch (IOException e) {
+			showError(e.getMessage());
+		}
+		return false;
+	}
+
+	/**
+	 * Prompt user to overwrite file
+	 * 
+	 * @return int one of SWT.YES, SWT.NO or SWT.CANCEL
+	 */
+	private int promptForOverwrite() {
+		final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+		box.setText("Overwrite");
+		box.setMessage("File exists. Would you like to overwrite it?");
+		return box.open();
 	}
 
 	/**
@@ -567,13 +599,10 @@ public class Textify {
 			file = new File(chosenPath);
 			if (file.exists()) {
 				// prompt for overwrite
-				final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
-				box.setText("Overwrite");
-				box.setMessage("File exists. Would you like to overwrite it?");
-				int result = box.open();
-				if (result == SWT.CANCEL) {
+				final int overwrite = promptForOverwrite();
+				if (overwrite == SWT.CANCEL) {
 					return;
-				} else if (result == SWT.YES) {
+				} else if (overwrite == SWT.YES) {
 					write = true;
 				}
 			} else {
@@ -582,15 +611,7 @@ public class Textify {
 		}
 		// do we have everything we need to write file?
 		if (write) {
-			try (FileWriter writer = new FileWriter(file)) {
-				writer.write(text.getText());
-				currentFile = file;
-				textChanged = false;
-				filenameLabel.setText(file.getAbsolutePath());
-				shell.setText(file.getName());
-			} catch (IOException e) {
-				showError(e.getMessage());
-			}
+			write(file);
 		}
 	}
 
@@ -610,7 +631,7 @@ public class Textify {
 	 */
 	private void showError(String string) {
 		LOGGER.log(Level.ERROR, string);
-		MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
+		final MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
 		messageBox.setText("Error");
 		messageBox.setMessage(string);
 		messageBox.open();
