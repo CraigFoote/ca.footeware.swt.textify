@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -291,20 +292,23 @@ public class Textify {
 	 */
 	private void createScrollingText() {
 		// scroller
-		ScrolledComposite scrolledComposite = new ScrolledComposite(shell, SWT.V_SCROLL | SWT.BORDER);
+		LOGGER.log(Level.DEBUG, "Creating scroller.");
+		final ScrolledComposite scrolledComposite = new ScrolledComposite(shell, SWT.V_SCROLL | SWT.BORDER);
 		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
 		scrolledComposite.setLayoutData(gridData);
+		scrolledComposite.setLayout(new FillLayout());
 
 		// text
+		LOGGER.log(Level.DEBUG, "Creating Text.");
 		text = new Text(scrolledComposite, SWT.BORDER | SWT.MULTI | SWT.WRAP);
-		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
-		text.setLayoutData(gridData);
+		LOGGER.log(Level.DEBUG, "Adding modify listener.");
 		text.addModifyListener(e -> {
 			textChanged = true;
 			shell.setText("* " + shell.getText().replace("* ", ""));
 			numCharsLabel.setText(text.getCharCount() + " chars");
 			statusbar.layout(true);
 		});
+		LOGGER.log(Level.DEBUG, "Adding key listener.");
 		text.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -320,9 +324,11 @@ public class Textify {
 		});
 
 		// finish scrollbar init
-		scrolledComposite.setContent(text);
+		LOGGER.log(Level.DEBUG, "setExpandVertical");
 		scrolledComposite.setExpandVertical(true);
+		LOGGER.log(Level.DEBUG, "setExpandHorizontal");
 		scrolledComposite.setExpandHorizontal(true);
+		LOGGER.log(Level.DEBUG, "adding resize listener.");
 		scrolledComposite.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
@@ -330,6 +336,8 @@ public class Textify {
 				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
+		LOGGER.log(Level.DEBUG, "setContent");
+		scrolledComposite.setContent(text);
 	}
 
 	/**
