@@ -30,8 +30,8 @@ import com.vaadin.open.Open;
  */
 public class AboutDialog extends Dialog {
 
-	private Image programmerImage;
 	private static final Logger LOGGER = LogManager.getLogger(AboutDialog.class);
+	private Image programmerImage;
 
 	public AboutDialog(Shell parent) {
 		super(parent, SWT.APPLICATION_MODAL);
