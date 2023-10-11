@@ -74,6 +74,7 @@ public class Textify extends ApplicationWindow {
 	private PreferenceStore preferenceStore;
 	private PreferenceManager preferenceManager;
 	private Font font;
+	private String[] args;
 
 	/**
 	 * Constructor.
@@ -82,8 +83,8 @@ public class Textify extends ApplicationWindow {
 	 */
 	public Textify(String[] args) {
 		super(null);
+		this.args = args;
 		setBlockOnOpen(true);
-		handleCliArgs(args);
 		open();
 		dispose();
 		Display.getCurrent().dispose();
@@ -171,6 +172,7 @@ public class Textify extends ApplicationWindow {
 		createTextViewer();
 		createStatusbar();
 		configurePreferences();
+		handleCliArgs();
 		return parent;
 	}
 
@@ -322,9 +324,7 @@ public class Textify extends ApplicationWindow {
 	 * Create the {@link TextViewer}.
 	 */
 	private void createTextViewer() {
-		LOGGER.log(Level.DEBUG, "About to construct TextViewer");
 		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		LOGGER.log(Level.DEBUG, "Done constructing TextViewer");
 		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(800, 600)
 				.applyTo(viewer.getTextWidget());
 		viewer.setDocument(new Document());
@@ -368,7 +368,10 @@ public class Textify extends ApplicationWindow {
 			font.dispose();
 	}
 
-	private void handleCliArgs(String[] args) {
+	/**
+	 * Handle command line arguments.
+	 */
+	private void handleCliArgs() {
 		// handle cli arg
 		if (args.length > 1) {
 			showError("Expected at most one argument, a file, but received: " + args.length, null);
@@ -392,6 +395,7 @@ public class Textify extends ApplicationWindow {
 					showError("An error occurred loading the file", e1);
 				}
 			} else {
+				LOGGER.log(Level.DEBUG, "Loading file.");
 				loadFile(file);
 			}
 		}
