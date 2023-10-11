@@ -15,22 +15,29 @@ import java.util.List;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
+import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.TextViewer;
+import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
@@ -38,127 +45,48 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 
 import swt.textify.dialogs.AboutDialog;
-import swt.textify.dialogs.PreferencesDialog;
 import swt.textify.exceptions.FontException;
+import swt.textify.preferences.FontPreferencePage;
 import swt.textify.preferences.FontUtils;
-import swt.textify.preferences.PreferenceProvider;
 
 /**
- * A minimal text editor.
+ *
  */
-public class Textify {
+public class Textify extends ApplicationWindow {
 
+	private static final String APP_NAME = "textify";
+	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private static final Logger LOGGER = LogManager.getLogger(Textify.class);
-	private Shell shell;
-	private Text text;
 	private Image newImage;
 	private Image openImage;
 	private Image saveImage;
 	private Image saveAsImage;
-	private Image hamburgerImage;
-	private File currentFile;
-	private boolean textChanged = false;
-	private PreferenceProvider prefs;
+	private Image menuImage;
 	private Composite statusbar;
 	private Label filenameLabel;
 	private Label numCharsLabel;
-	private Cursor cursor;
+	private ITextViewer viewer;
+	private boolean textChanged = false;
+	private File currentFile;
+	private PreferenceStore preferenceStore;
+	private PreferenceManager preferenceManager;
+	private Font font;
 
 	/**
 	 * Constructor.
+	 *
+	 * @param args {@link String}[]
 	 */
 	public Textify(String[] args) {
-		LOGGER.log(Level.DEBUG, "Getting display.");
-		final Display display = Display.getDefault();
-		LOGGER.log(Level.DEBUG, "Constructing Shell.");
-		shell = new Shell(display);
-		shell.setText("textify");
-
-		shell.addDisposeListener(e -> {
-			// save shell size to prefs
-			final Point size = shell.getSize();
-			prefs.setProperty("shell.width", String.valueOf(size.x));
-			prefs.setProperty("shell.height", String.valueOf(size.y));
-			prefs.save();
-
-			// prompt to save modifications
-			if (textChanged) {
-				final MessageBox box = new MessageBox(shell, SWT.NO | SWT.YES | SWT.ICON_QUESTION);
-				box.setText("Save");
-				box.setMessage(SAVE_PROMPT);
-				if (box.open() == SWT.YES) {
-					save();
-				}
-			}
-
-			// dispose of images
-			dispose();
-		});
-
-		GridLayout gridLayout = new GridLayout(2, false);
-		shell.setLayout(gridLayout);
-		LOGGER.log(Level.DEBUG, "Creating left toolbar");
-		createLeftToolbar();
-		LOGGER.log(Level.DEBUG, "Creating right toolbar");
-		createRightToolbar();
-		LOGGER.log(Level.DEBUG, "Creating scrolling Text");
-		createScrollingText();
-		LOGGER.log(Level.DEBUG, "Creating statusbar");
-		createStatusbar();
-		LOGGER.log(Level.DEBUG, "Handling args");
+		super(null);
+		setBlockOnOpen(true);
 		handleCliArgs(args);
-
-		LOGGER.log(Level.DEBUG, "Opening Shell.");
-		shell.open();
-
-		LOGGER.log(Level.DEBUG, "Setting focus on Text");
-		text.setFocus();
-
-		// preferences
-		LOGGER.log(Level.DEBUG, "Scheduling preferences.");
-		Display.getDefault().asyncExec(() -> {
-			LOGGER.log(Level.DEBUG, "Creating PreferenceProvider.");
-			prefs = new PreferenceProvider();
-			LOGGER.log(Level.DEBUG, "Setting shell size.");
-			setShellSize();
-			try {
-				LOGGER.log(Level.DEBUG, "Getting font from prefs.");
-				final Font font = getFont(prefs, shell.getDisplay());
-				LOGGER.log(Level.DEBUG, "Setting font.");
-				text.setFont(font);
-				LOGGER.log(Level.DEBUG, "Disposing font...");
-				font.dispose();
-				LOGGER.log(Level.DEBUG, "Font disposed.");
-			} catch (FontException e) {
-				showError(e.getMessage());
-			}
-		});
-
-		LOGGER.log(Level.DEBUG, "Scheduling cursor update.");
-		Display.getDefault().asyncExec(() -> {
-			LOGGER.log(Level.DEBUG, "Constructing Cursor.");
-			cursor = new Cursor(display, SWT.CURSOR_ARROW);
-			LOGGER.log(Level.DEBUG, "Setting cursor.");
-			shell.setCursor(cursor);
-			LOGGER.log(Level.DEBUG, "Done setting cursor.");
-		});
-
-		LOGGER.log(Level.DEBUG, "Done constructing Textify.");
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-
-		// disposes all associated windows and their components
-		display.dispose();
-		LOGGER.log(Level.DEBUG, "Application stopping.");
+		open();
+		dispose();
+		Display.getCurrent().dispose();
 	}
 
 	/**
@@ -189,163 +117,190 @@ public class Textify {
 	 * Clears text widget and sets appropriate labels.
 	 */
 	private void clear() {
-		text.setText("");
+		viewer.getDocument().set("");
 		currentFile = null;
 		textChanged = false;
 		filenameLabel.setText("");
 		numCharsLabel.setText("0 chars");
-		shell.setText("textify");
+		getShell().setText(APP_NAME);
 	}
 
 	/**
-	 * Create a toolbar with buttons aligned left.
+	 * Configure the provided composite.
+	 *
+	 * @param parent {@link Composite}
+	 */
+	private void configureParent(Composite parent) {
+		Control[] children = parent.getChildren();
+		if (children.length > 0 && children[0] != null && !children[0].isDisposed()) {
+			parent.getChildren()[0].dispose(); // why is there a label here?
+		}
+		GridDataFactory.swtDefaults().grab(true, true).align(SWT.FILL, SWT.FILL).applyTo(parent);
+		GridLayoutFactory.swtDefaults().numColumns(2).equalWidth(false).applyTo(parent);
+	}
+
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText(APP_NAME);
+	}
+
+	/**
+	 * Create a button.
+	 *
+	 * @param parent  {@link Composite}
+	 * @param text    {@link String}
+	 * @param image   {@link Image}
+	 * @param toolTip {@link String}
+	 * @return {@link Button}
+	 */
+	private Button createButton(Composite parent, String text, Image image, String toolTip) {
+		final Button button = new Button(parent, SWT.PUSH | SWT.FLAT);
+		button.setText(text);
+		button.setImage(image);
+		button.setToolTipText(toolTip);
+		GridDataFactory.swtDefaults().applyTo(button);
+		return button;
+	}
+
+	@Override
+	protected Control createContents(Composite parent) {
+		configureParent(parent);
+		createLeftToolbar();
+		createRightToolbar();
+		createTextViewer();
+		createStatusbar();
+		configurePreferences();
+		return parent;
+	}
+
+	private void configurePreferences() {
+		preferenceManager = new PreferenceManager();
+		PreferenceNode fontNode = new PreferenceNode("Font", "Font", null, FontPreferencePage.class.getName());
+		preferenceManager.addToRoot(fontNode);
+		// Set the preference store
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append(System.getProperty("user.home"));
+		stringBuilder.append(File.separator);
+		stringBuilder.append(".local");
+		stringBuilder.append(File.separator);
+		stringBuilder.append("share");
+		stringBuilder.append(File.separator);
+		stringBuilder.append(APP_NAME);
+		stringBuilder.append(File.separator);
+		stringBuilder.append("textify.properties");
+		String storePath = stringBuilder.toString();
+		preferenceStore = new PreferenceStore(storePath);
+		preferenceStore.setDefault("Font", Display.getDefault().getSystemFont().getFontData()[0].toString());
+		try {
+			preferenceStore.load();
+		} catch (IOException e) {
+			LOGGER.log(Level.INFO, e);
+		}
+		String fontProperty = preferenceStore.getString("Font");
+		if (fontProperty != null && !fontProperty.isEmpty()) {
+			try {
+				FontData fontData = FontUtils.getFontData(fontProperty);
+				if (font != null) {
+					font.dispose();
+				}
+				font = new Font(getShell().getDisplay(), fontData);
+				viewer.getTextWidget().setFont(font);
+			} catch (FontException e) {
+				showError("An error occurred getting font from preferences.", e);
+			}
+		}
+	}
+
+	/**
+	 * Create the left-most toolbar with its buttons.
 	 */
 	private void createLeftToolbar() {
-		// left toolbar
-		final ToolBar toolBarLeft = new ToolBar(shell, SWT.NONE);
-		GridData gridData = new GridData(GridData.FILL, GridData.FILL, false, false);
-		toolBarLeft.setLayoutData(gridData);
-		Rectangle clientArea = shell.getClientArea();
-		toolBarLeft.setLocation(clientArea.x, clientArea.y);
+		final Composite leftToolBar = new Composite(getShell(), SWT.NONE);
+		GridDataFactory.swtDefaults().align(SWT.LEFT, SWT.FILL).grab(false, false).applyTo(leftToolBar);
+		GridLayoutFactory.swtDefaults().numColumns(4).equalWidth(true).applyTo(leftToolBar);
 
-		// New
-		final ToolItem newItem = new ToolItem(toolBarLeft, SWT.NONE);
-		InputStream in = Textify.class.getResourceAsStream("/images/new.png");
-		newImage = new Image(shell.getDisplay(), in);
-		newItem.setImage(newImage);
-		newItem.setToolTipText("Start a new document");
-		newItem.addListener(SWT.Selection, event -> newFile());
+		newImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "new.png"));
+		Button button = createButton(leftToolBar, "New", newImage, "Start a new document");
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).hint(100, 50).applyTo(button);
+		button.addListener(SWT.Selection, event -> newFile());
 
-		// Open
-		final ToolItem openItem = new ToolItem(toolBarLeft, SWT.NONE);
-		in = Textify.class.getResourceAsStream("/images/open.png");
-		openImage = new Image(shell.getDisplay(), in);
-		openItem.setImage(openImage);
-		openItem.setToolTipText("Open an existing document");
-		openItem.addListener(SWT.Selection, event -> openFile());
+		openImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "open.png"));
+		button = createButton(leftToolBar, "Open", openImage, "Open an existing document");
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).applyTo(button);
+		button.addListener(SWT.Selection, event -> openFile());
 
-		// Save
-		final ToolItem saveItem = new ToolItem(toolBarLeft, SWT.NONE);
-		in = Textify.class.getResourceAsStream("/images/save.png");
-		saveImage = new Image(shell.getDisplay(), in);
-		saveItem.setToolTipText("Save current document to file");
-		saveItem.setImage(saveImage);
-		saveItem.addListener(SWT.Selection, event -> save());
+		saveImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "save.png"));
+		button = createButton(leftToolBar, "Save", saveImage, "Save current document to file");
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).applyTo(button);
+		button.addListener(SWT.Selection, event -> save());
 
-		// Save As
-		final ToolItem saveAsItem = new ToolItem(toolBarLeft, SWT.NONE);
-		in = Textify.class.getResourceAsStream("/images/save-as.png");
-		saveAsImage = new Image(shell.getDisplay(), in);
-		saveAsItem.setImage(saveAsImage);
-		saveAsItem.setToolTipText("Save current document as new file");
-		saveAsItem.addListener(SWT.Selection, event -> saveAs());
+		saveAsImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "save-as.png"));
+		button = createButton(leftToolBar, "Save As", saveAsImage, "Save current document as a new file");
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).applyTo(button);
+		button.addListener(SWT.Selection, event -> saveAs());
 	}
 
 	/**
-	 * Create a toolbar with buttons aligned right.
+	 * Create the right-most toolbar with its buttons.
 	 */
 	private void createRightToolbar() {
 		// right toolbar
-		final ToolBar toolBarRight = new ToolBar(shell, SWT.NONE);
-		GridData gridData = new GridData(GridData.END, GridData.FILL, true, false);
-		toolBarRight.setLayoutData(gridData);
+		final Composite rightToolBar = new Composite(getShell(), SWT.NONE);
+		GridDataFactory.swtDefaults().align(SWT.RIGHT, SWT.FILL).grab(false, false).applyTo(rightToolBar);
+		GridLayoutFactory.swtDefaults().applyTo(rightToolBar);
 
 		// menu for hamburger button
-		final Menu menu = new Menu(shell, SWT.POP_UP);
+		final Menu menu = new Menu(getShell(), SWT.POP_UP);
 
 		// Preferences
-		MenuItem prefsItem = new MenuItem(menu, SWT.PUSH);
-		prefsItem.setText("Preferences");
-		prefsItem.addListener(SWT.Selection, event -> {
-			new PreferencesDialog(shell, prefs).open();
+		MenuItem preferencesItem = new MenuItem(menu, SWT.PUSH);
+		preferencesItem.setText("Preferences");
+		preferencesItem.addListener(SWT.Selection, event -> {
+			PreferenceDialog preferenceDialog = new PreferenceDialog(getShell(), preferenceManager);
+			preferenceDialog.setMinimumPageSize(SWT.DEFAULT, 50);
+			preferenceDialog.setPreferenceStore(preferenceStore);
+			preferenceDialog.open();
 			try {
-				final Font font = getFont(prefs, shell.getDisplay());
-				text.setFont(font);
-				font.dispose();
-			} catch (FontException e1) {
-				showError(e1.getMessage());
+				preferenceStore.save();
+			} catch (IOException e) {
+				showError("An error occurred saving preferences.", e);
+			}
+			try {
+				viewer.getTextWidget().setFont(
+						new Font(getShell().getDisplay(), FontUtils.getFontData(preferenceStore.getString("Font"))));
+			} catch (FontException e) {
+				showError("An error occurred setting the viewer font.", e);
 			}
 		});
 
 		// About menu
 		MenuItem aboutItem = new MenuItem(menu, SWT.PUSH);
 		aboutItem.setText("About");
-		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(shell).open());
+		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(getShell()).open());
 
 		// hamburger
-		final ToolItem item = new ToolItem(toolBarRight, SWT.NONE);
-		InputStream in = Textify.class.getResourceAsStream("/images/hamburger.png");
-		hamburgerImage = new Image(shell.getDisplay(), in);
-		item.setImage(hamburgerImage);
-		item.addListener(SWT.Selection, event -> {
-			Rectangle rect = item.getBounds();
+		final Button menuButton = new Button(rightToolBar, SWT.NONE);
+		InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "menu.png");
+		menuImage = new Image(getShell().getDisplay(), in);
+		menuButton.setImage(menuImage);
+		GridDataFactory.swtDefaults().hint(50, 50).align(SWT.FILL, SWT.FILL).applyTo(menuButton);
+		menuButton.addListener(SWT.Selection, event -> {
+			Rectangle rect = menuButton.getBounds();
 			Point pt = new Point(rect.x, rect.y + rect.height);
-			pt = toolBarRight.toDisplay(pt);
+			pt = rightToolBar.toDisplay(pt);
 			menu.setLocation(pt.x, pt.y);
 			menu.setVisible(true);
 		});
-		toolBarRight.pack();
+		rightToolBar.pack();
 	}
 
 	/**
-	 * Create a text widget inside a scroller.
-	 */
-	private void createScrollingText() {
-		// scroller
-		LOGGER.log(Level.DEBUG, "Creating scroller.");
-		final ScrolledComposite scrolledComposite = new ScrolledComposite(shell, SWT.V_SCROLL | SWT.BORDER);
-		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
-		scrolledComposite.setLayoutData(gridData);
-		scrolledComposite.setLayout(new FillLayout());
-
-		// text
-		LOGGER.log(Level.DEBUG, "Creating Text.");
-		text = new Text(scrolledComposite, SWT.BORDER | SWT.MULTI | SWT.WRAP);
-		LOGGER.log(Level.DEBUG, "Adding modify listener.");
-		text.addModifyListener(e -> {
-			textChanged = true;
-			shell.setText("* " + shell.getText().replace("* ", ""));
-			numCharsLabel.setText(text.getCharCount() + " chars");
-			statusbar.layout(true);
-		});
-		LOGGER.log(Level.DEBUG, "Adding key listener.");
-		text.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if ((e.stateMask & SWT.CTRL) != 0) {
-					if (e.keyCode == 115) { // ctrl+s
-						save();
-					} else if (e.keyCode == 119) { // ctrl+w
-						shell.close();
-					}
-				}
-				super.keyReleased(e);
-			}
-		});
-
-		// finish scrollbar init
-		LOGGER.log(Level.DEBUG, "setExpandVertical");
-		scrolledComposite.setExpandVertical(true);
-		LOGGER.log(Level.DEBUG, "setExpandHorizontal");
-		scrolledComposite.setExpandHorizontal(true);
-		LOGGER.log(Level.DEBUG, "adding resize listener.");
-		scrolledComposite.addControlListener(new ControlAdapter() {
-			@Override
-			public void controlResized(ControlEvent e) {
-				Rectangle r = scrolledComposite.getClientArea();
-				scrolledComposite.setMinSize(text.computeSize(r.width, SWT.DEFAULT));
-			}
-		});
-		LOGGER.log(Level.DEBUG, "setContent");
-		scrolledComposite.setContent(text);
-	}
-
-	/**
-	 * Create statusbar with labels.
+	 * Create the statusbar with its two labels.
 	 */
 	private void createStatusbar() {
 		// statusbar
-		statusbar = new Composite(shell, SWT.NONE);
+		statusbar = new Composite(getShell(), SWT.NONE);
 		GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 		statusbar.setLayoutData(gridData);
 		GridLayout gridLayout = new GridLayout(2, false);
@@ -364,58 +319,59 @@ public class Textify {
 	}
 
 	/**
-	 * Explicitly dispose of created images.
+	 * Create the {@link TextViewer}.
 	 */
-	protected void dispose() {
-		if (newImage != null) {
-			newImage.dispose();
-			newImage = null;
-		}
-		if (openImage != null) {
-			openImage.dispose();
-			openImage = null;
-		}
-		if (saveImage != null) {
-			saveImage.dispose();
-			saveImage = null;
-		}
-		if (saveAsImage != null) {
-			saveAsImage.dispose();
-			saveAsImage = null;
-		}
-		if (hamburgerImage != null) {
-			hamburgerImage.dispose();
-			hamburgerImage = null;
-		}
-		if (cursor != null) {
-			cursor.dispose();
-			cursor = null;
-		}
+	private void createTextViewer() {
+		LOGGER.log(Level.DEBUG, "About to construct TextViewer");
+		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		LOGGER.log(Level.DEBUG, "Done constructing TextViewer");
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(800, 600)
+				.applyTo(viewer.getTextWidget());
+		viewer.setDocument(new Document());
+		viewer.addTextListener(event -> {
+			textChanged = true;
+			getShell().setText("* " + getShell().getText().replace("* ", ""));
+			numCharsLabel.setText(viewer.getDocument().get().length() + " chars");
+			statusbar.layout(true);
+		});
+		viewer.getTextWidget().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if ((e.stateMask & SWT.CTRL) != 0) {
+					if (e.keyCode == 115) { // ctrl+s
+						save();
+					} else if (e.keyCode == 119) { // ctrl+w
+						getShell().close();
+					}
+				}
+				super.keyReleased(e);
+			}
+		});
+		viewer.getTextWidget().setFocus();
 	}
 
 	/**
-	 * Get the font from preferences. The caller is responsible for disposing of it.
-	 *
-	 * @param prefs   {@link PreferenceProvider}
-	 * @param display {@link Display}
-	 * @return {@link Font}
-	 * @throws FontException if an error occurs getting FontData from prefs property
+	 * Disposes the images
 	 */
-	private Font getFont(PreferenceProvider prefs, Display display) throws FontException {
-		final String fontProperty = prefs.getProperty("font", null);
-		FontData fontData;
-		if (fontProperty == null) {
-			fontData = new FontData("sans", 14, SWT.NORMAL);
-		} else {
-			fontData = FontUtils.getFontData(fontProperty);
-		}
-		return new Font(display, fontData);
+	private void dispose() {
+		if (newImage != null)
+			newImage.dispose();
+		if (openImage != null)
+			openImage.dispose();
+		if (saveImage != null)
+			saveImage.dispose();
+		if (saveAsImage != null)
+			saveAsImage.dispose();
+		if (menuImage != null)
+			menuImage.dispose();
+		if (font != null)
+			font.dispose();
 	}
 
 	private void handleCliArgs(String[] args) {
 		// handle cli arg
 		if (args.length > 1) {
-			showError("Expected at most one argument, a file, but received: " + args.length);
+			showError("Expected at most one argument, a file, but received: " + args.length, null);
 		}
 		if (args.length == 1) {
 			// file received
@@ -427,13 +383,13 @@ public class Textify {
 					LOGGER.log(Level.INFO, "File does not exist - creating it.");
 					final boolean created = file.createNewFile();
 					if (!created) {
-						showError("Unknown error creating file.");
+						showError("Unknown error creating file.", null);
 					} else {
 						LOGGER.log(Level.INFO, "File created - loading...");
 						loadFile(file);
 					}
 				} catch (IOException e1) {
-					showError("Error loading file:\n" + e1.getMessage());
+					showError("An error occurred loading the file", e1);
 				}
 			} else {
 				loadFile(file);
@@ -468,13 +424,13 @@ public class Textify {
 				builder.append("\n");
 			}
 			// set in text widget
-			text.setText(builder.toString());
+			viewer.getDocument().set(builder.toString());
 			currentFile = file;
 			textChanged = false;
 			filenameLabel.setText(file.getAbsolutePath());
-			shell.setText(file.getName());
+			getShell().setText(file.getName());
 		} catch (IOException | IllegalArgumentException e) {
-			showError(e.getMessage());
+			showError("An error occurred loading the file.", e);
 		}
 	}
 
@@ -483,7 +439,7 @@ public class Textify {
 	 */
 	private void newFile() {
 		if (textChanged) {
-			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
 			box.setMessage(SAVE_PROMPT);
 			int result = box.open();
@@ -498,10 +454,10 @@ public class Textify {
 	/**
 	 * Open a file.
 	 */
-	protected void openFile() {
+	private void openFile() {
 		if (textChanged) {
 			// prompt user to save
-			final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
 			box.setMessage(SAVE_PROMPT);
 			int result = box.open();
@@ -512,12 +468,24 @@ public class Textify {
 			}
 		}
 		// proceed with opening a file
-		final FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+		final FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
 		final String path = dialog.open();
 		if (path != null && !path.isEmpty()) {
 			File file = new File(path);
 			loadFile(file);
 		}
+	}
+
+	/**
+	 * Prompt user to overwrite file
+	 * 
+	 * @return int one of SWT.YES, SWT.NO or SWT.CANCEL
+	 */
+	private int promptForOverwrite() {
+		final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+		box.setText("Overwrite");
+		box.setMessage("File exists. Would you like to overwrite it?");
+		return box.open();
 	}
 
 	/**
@@ -536,7 +504,7 @@ public class Textify {
 			// good to go
 		} else {
 			// prompt for filename and location
-			final FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
+			final FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
 			final String chosenPath = fileDialog.open();
 			// filePath will be null if a file was not chosen or name entered
 			if (chosenPath != null) {
@@ -562,38 +530,6 @@ public class Textify {
 	}
 
 	/**
-	 * Write file to disk and update UI.
-	 * 
-	 * @param file {@link File}
-	 * @return boolean true if file was written
-	 */
-	private boolean write(File file) {
-		try (FileWriter writer = new FileWriter(file)) {
-			writer.write(text.getText());
-			currentFile = file;
-			textChanged = false;
-			filenameLabel.setText(file.getAbsolutePath());
-			shell.setText(file.getName());
-			return true;
-		} catch (IOException e) {
-			showError(e.getMessage());
-		}
-		return false;
-	}
-
-	/**
-	 * Prompt user to overwrite file
-	 * 
-	 * @return int one of SWT.YES, SWT.NO or SWT.CANCEL
-	 */
-	private int promptForOverwrite() {
-		final MessageBox box = new MessageBox(shell, SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
-		box.setText("Overwrite");
-		box.setMessage("File exists. Would you like to overwrite it?");
-		return box.open();
-	}
-
-	/**
 	 * Prompt for filename and location and save text to file.
 	 */
 	private void saveAs() {
@@ -602,7 +538,7 @@ public class Textify {
 		// pessimistic view on writing
 		boolean write = false;
 		// prompt for filename and location
-		final FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
+		final FileDialog fileDialog = new FileDialog(getShell(), SWT.SAVE);
 		final String chosenPath = fileDialog.open();
 		// filePath will be null if a file was not chosen or name entered
 		if (chosenPath != null) {
@@ -626,24 +562,35 @@ public class Textify {
 	}
 
 	/**
-	 * Set size of shell from prefs.
-	 */
-	private void setShellSize() {
-		final int savedWidth = Integer.parseInt(prefs.getProperty("shell.width", String.valueOf(800)));
-		final int savedHeight = Integer.parseInt(prefs.getProperty("shell.height", String.valueOf(600)));
-		shell.setSize(savedWidth, savedHeight);
-	}
-
-	/**
 	 * Display an error message to the user.
 	 *
 	 * @param string {@link String}
 	 */
-	private void showError(String string) {
-		LOGGER.log(Level.ERROR, string);
-		final MessageBox messageBox = new MessageBox(shell, SWT.ICON_ERROR);
+	private void showError(String string, Exception e) {
+		LOGGER.log(Level.ERROR, string, e);
+		final MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_ERROR);
 		messageBox.setText("Error");
 		messageBox.setMessage(string);
 		messageBox.open();
+	}
+
+	/**
+	 * Write file to disk and update UI.
+	 * 
+	 * @param file {@link File}
+	 * @return boolean true if file was written
+	 */
+	private boolean write(File file) {
+		try (FileWriter writer = new FileWriter(file)) {
+			writer.write(viewer.getDocument().get());
+			currentFile = file;
+			textChanged = false;
+			filenameLabel.setText(file.getAbsolutePath());
+			getShell().setText(file.getName());
+			return true;
+		} catch (IOException e) {
+			showError("An error occurred writing the file out to disk.", e);
+		}
+		return false;
 	}
 }
