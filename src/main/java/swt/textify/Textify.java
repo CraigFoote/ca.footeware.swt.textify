@@ -50,6 +50,7 @@ import swt.textify.dialogs.AboutDialog;
 import swt.textify.exceptions.FontException;
 import swt.textify.preferences.FontPreferencePage;
 import swt.textify.preferences.FontUtils;
+import swt.textify.preferences.WrapPreferencePage;
 
 /**
  *
@@ -178,8 +179,13 @@ public class Textify extends ApplicationWindow {
 
 	private void configurePreferences() {
 		preferenceManager = new PreferenceManager();
+
 		PreferenceNode fontNode = new PreferenceNode("Font", "Font", null, FontPreferencePage.class.getName());
 		preferenceManager.addToRoot(fontNode);
+
+		PreferenceNode wrapNode = new PreferenceNode("Wrap", "Wrap", null, WrapPreferencePage.class.getName());
+		preferenceManager.addToRoot(wrapNode);
+		
 		// Set the preference store
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(System.getProperty("user.home"));
@@ -193,12 +199,23 @@ public class Textify extends ApplicationWindow {
 		stringBuilder.append("textify.properties");
 		String storePath = stringBuilder.toString();
 		preferenceStore = new PreferenceStore(storePath);
+
+		// defaults
 		preferenceStore.setDefault("Font", Display.getDefault().getSystemFont().getFontData()[0].toString());
+		preferenceStore.setDefault("Wrap", true);
+
+		// load prefs from file
 		try {
 			preferenceStore.load();
 		} catch (IOException e) {
 			LOGGER.log(Level.INFO, e);
 		}
+
+		// set text wrap
+		boolean wrapProperty = preferenceStore.getBoolean("Wrap");
+		viewer.getTextWidget().setWordWrap(wrapProperty);
+
+		// set text font
 		String fontProperty = preferenceStore.getString("Font");
 		if (fontProperty != null && !fontProperty.isEmpty()) {
 			try {
@@ -269,6 +286,7 @@ public class Textify extends ApplicationWindow {
 				showError("An error occurred saving preferences.", e);
 			}
 			try {
+				viewer.getTextWidget().setWordWrap(preferenceStore.getBoolean("Wrap"));
 				viewer.getTextWidget().setFont(
 						new Font(getShell().getDisplay(), FontUtils.getFontData(preferenceStore.getString("Font"))));
 			} catch (FontException e) {

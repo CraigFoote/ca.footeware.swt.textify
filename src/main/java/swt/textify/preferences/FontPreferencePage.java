@@ -31,7 +31,7 @@ public class FontPreferencePage extends PreferencePage {
 	private Font font;
 
 	/**
-	 * PrefPageTwo constructor
+	 * Constructor.
 	 */
 	public FontPreferencePage() {
 		super(FONT_PROPERTY_NAME);
