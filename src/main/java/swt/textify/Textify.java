@@ -15,17 +15,25 @@ import java.util.List;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Font;
@@ -76,6 +84,7 @@ public class Textify extends ApplicationWindow {
 	private PreferenceManager preferenceManager;
 	private Font font;
 	private String[] args;
+	private Clipboard clipboard;
 
 	/**
 	 * Constructor.
@@ -141,42 +150,9 @@ public class Textify extends ApplicationWindow {
 		GridLayoutFactory.swtDefaults().numColumns(2).equalWidth(false).applyTo(parent);
 	}
 
-	@Override
-	protected void configureShell(Shell shell) {
-		super.configureShell(shell);
-		shell.setText(APP_NAME);
-	}
-
 	/**
-	 * Create a button.
-	 *
-	 * @param parent  {@link Composite}
-	 * @param text    {@link String}
-	 * @param image   {@link Image}
-	 * @param toolTip {@link String}
-	 * @return {@link Button}
+	 * Set up preferences for eventual use. Set text font and wrap from preferences.
 	 */
-	private Button createButton(Composite parent, String text, Image image, String toolTip) {
-		final Button button = new Button(parent, SWT.PUSH | SWT.FLAT);
-		button.setText(text);
-		button.setImage(image);
-		button.setToolTipText(toolTip);
-		GridDataFactory.swtDefaults().applyTo(button);
-		return button;
-	}
-
-	@Override
-	protected Control createContents(Composite parent) {
-		configureParent(parent);
-		createLeftToolbar();
-		createRightToolbar();
-		createTextViewer();
-		createStatusbar();
-		configurePreferences();
-		handleCliArgs();
-		return parent;
-	}
-
 	private void configurePreferences() {
 		preferenceManager = new PreferenceManager();
 
@@ -185,7 +161,7 @@ public class Textify extends ApplicationWindow {
 
 		PreferenceNode wrapNode = new PreferenceNode("Wrap", "Wrap", null, WrapPreferencePage.class.getName());
 		preferenceManager.addToRoot(wrapNode);
-		
+
 		// Set the preference store
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(System.getProperty("user.home"));
@@ -229,6 +205,77 @@ public class Textify extends ApplicationWindow {
 				showError("An error occurred getting font from preferences.", e);
 			}
 		}
+	}
+
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText(APP_NAME);
+	}
+
+	/**
+	 * Create a button.
+	 *
+	 * @param parent  {@link Composite}
+	 * @param text    {@link String}
+	 * @param image   {@link Image}
+	 * @param toolTip {@link String}
+	 * @return {@link Button}
+	 */
+	private Button createButton(Composite parent, String text, Image image, String toolTip) {
+		final Button button = new Button(parent, SWT.PUSH | SWT.FLAT);
+		button.setText(text);
+		button.setImage(image);
+		button.setToolTipText(toolTip);
+		GridDataFactory.swtDefaults().applyTo(button);
+		return button;
+	}
+
+	@Override
+	protected Control createContents(Composite parent) {
+		configureParent(parent);
+		createLeftToolbar();
+		createRightToolbar();
+		createTextViewer();
+		createStatusbar();
+		configurePreferences();
+		handleCliArgs();
+		createContextMenu();
+		createDisposeListener();
+		return parent;
+	}
+
+	/**
+	 * Handle window closing when text has been modified.
+	 */
+	private void createDisposeListener() {
+		getShell().addDisposeListener(e -> {
+			if (textChanged) {
+				final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.ICON_QUESTION);
+				box.setText("Save");
+				box.setMessage("Text has been modified. Would you like to save it before closing?");
+				if (box.open() == SWT.NO) {
+					getShell().close();
+				} else {
+					if (save()) {
+						getShell().close();
+					}
+				}
+			}
+		});
+	}
+
+	/**
+	 * Creates the context menu
+	 */
+	protected void createContextMenu() {
+		clipboard = new Clipboard(getShell().getDisplay());
+
+		MenuManager contextMenu = new MenuManager("#ViewerMenu");
+		contextMenu.setRemoveAllWhenShown(true);
+		contextMenu.addMenuListener(this::fillContextMenu);
+		Menu menu = contextMenu.createContextMenu(viewer.getTextWidget());
+		viewer.getTextWidget().setMenu(menu);
 	}
 
 	/**
@@ -359,7 +406,22 @@ public class Textify extends ApplicationWindow {
 					if (e.keyCode == 115) { // ctrl+s
 						save();
 					} else if (e.keyCode == 119) { // ctrl+w
-						getShell().close();
+						if (textChanged) {
+							final MessageBox box = new MessageBox(getShell(),
+									SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+							box.setText("Save");
+							box.setMessage("Text has been modified. Would you like to save it before closing?");
+							int response = box.open();
+							if (response == SWT.CANCEL) {
+								return;
+							} else if (response == SWT.NO) {
+								getShell().close();
+							} else {
+								if (save()) {
+									getShell().close();
+								}
+							}
+						}
 					}
 				}
 				super.keyReleased(e);
@@ -384,6 +446,59 @@ public class Textify extends ApplicationWindow {
 			menuImage.dispose();
 		if (font != null)
 			font.dispose();
+	}
+
+	/**
+	 * Fill dynamic context menu
+	 *
+	 * @param contextMenu
+	 */
+	protected void fillContextMenu(IMenuManager contextMenu) {
+		// Cut
+		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/cut.png");
+		contextMenu.add(new Action("Cut", descriptor) {
+			@Override
+			public void run() {
+				final String selectionText = viewer.getTextWidget().getSelectionText();
+				if (!selectionText.isEmpty()) {
+					final TextTransfer textTransfer = TextTransfer.getInstance();
+					final Transfer[] types = new Transfer[] { textTransfer };
+					clipboard.setContents(new Object[] { selectionText }, types);
+
+					Point selectedRange = viewer.getSelectedRange();
+					try {
+						viewer.getDocument().replace(selectedRange.x, selectedRange.y, "");
+					} catch (BadLocationException e) {
+						showError("An error occurred cutting text.", e);
+					}
+				}
+			}
+		});
+		// Copy
+		descriptor = ImageDescriptor.createFromFile(getClass(), "/images/copy.png");
+		contextMenu.add(new Action("Copy", descriptor) {
+			@Override
+			public void run() {
+				final String selectionText = viewer.getTextWidget().getSelectionText();
+				if (!selectionText.isEmpty()) {
+					final TextTransfer textTransfer = TextTransfer.getInstance();
+					final Transfer[] types = new Transfer[] { textTransfer };
+					clipboard.setContents(new Object[] { selectionText }, types);
+				}
+			}
+		});
+		// Paste
+		descriptor = ImageDescriptor.createFromFile(getClass(), "/images/paste.png");
+		contextMenu.add(new Action("Paste", descriptor) {
+			@Override
+			public void run() {
+				final TextTransfer textTransfer = TextTransfer.getInstance();
+				final String data = (String) clipboard.getContents(textTransfer);
+				if (data != null) {
+					viewer.getTextWidget().insert(data);
+				}
+			}
+		});
 	}
 
 	/**
@@ -500,7 +615,7 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Prompt user to overwrite file
-	 * 
+	 *
 	 * @return int one of SWT.YES, SWT.NO or SWT.CANCEL
 	 */
 	private int promptForOverwrite() {
@@ -515,7 +630,7 @@ public class Textify extends ApplicationWindow {
 	 *
 	 * @return boolean true if text was saved to file
 	 */
-	private boolean save() {
+	protected boolean save() {
 		// save text to file
 		File file = null;
 		// pessimistic view on writing
@@ -598,7 +713,7 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Write file to disk and update UI.
-	 * 
+	 *
 	 * @param file {@link File}
 	 * @return boolean true if file was written
 	 */
