@@ -25,16 +25,12 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Font;
@@ -85,7 +81,6 @@ public class Textify extends ApplicationWindow {
 	private PreferenceManager preferenceManager;
 	private Font font;
 	private String[] args;
-	private Clipboard clipboard;
 
 	/**
 	 * @constructor
@@ -275,8 +270,6 @@ public class Textify extends ApplicationWindow {
 	 * Creates the context menu
 	 */
 	protected void createContextMenu() {
-		clipboard = new Clipboard(getShell().getDisplay());
-
 		MenuManager contextMenu = new MenuManager("#ViewerMenu");
 		contextMenu.setRemoveAllWhenShown(true);
 		contextMenu.addMenuListener(this::fillContextMenu);
@@ -453,19 +446,7 @@ public class Textify extends ApplicationWindow {
 		contextMenu.add(new Action("Cut", descriptor) {
 			@Override
 			public void run() {
-				final String selectionText = viewer.getTextWidget().getSelectionText();
-				if (!selectionText.isEmpty()) {
-					final TextTransfer textTransfer = TextTransfer.getInstance();
-					final Transfer[] types = new Transfer[] { textTransfer };
-					clipboard.setContents(new Object[] { selectionText }, types);
-
-					Point selectedRange = viewer.getSelectedRange();
-					try {
-						viewer.getDocument().replace(selectedRange.x, selectedRange.y, "");
-					} catch (BadLocationException e) {
-						showError("An error occurred cutting text.", e);
-					}
-				}
+				((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.CUT);
 			}
 		});
 		// Copy
@@ -473,12 +454,7 @@ public class Textify extends ApplicationWindow {
 		contextMenu.add(new Action("Copy", descriptor) {
 			@Override
 			public void run() {
-				final String selectionText = viewer.getTextWidget().getSelectionText();
-				if (!selectionText.isEmpty()) {
-					final TextTransfer textTransfer = TextTransfer.getInstance();
-					final Transfer[] types = new Transfer[] { textTransfer };
-					clipboard.setContents(new Object[] { selectionText }, types);
-				}
+				((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.COPY);
 			}
 		});
 		// Paste
@@ -486,11 +462,7 @@ public class Textify extends ApplicationWindow {
 		contextMenu.add(new Action("Paste", descriptor) {
 			@Override
 			public void run() {
-				final TextTransfer textTransfer = TextTransfer.getInstance();
-				final String data = (String) clipboard.getContents(textTransfer);
-				if (data != null) {
-					viewer.getTextWidget().insert(data);
-				}
+				((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.PASTE);
 			}
 		});
 	}
