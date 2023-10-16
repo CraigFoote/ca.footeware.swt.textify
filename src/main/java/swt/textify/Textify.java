@@ -87,8 +87,7 @@ public class Textify extends ApplicationWindow {
 	private Clipboard clipboard;
 
 	/**
-	 * Constructor.
-	 *
+	 * @constructor
 	 * @param args {@link String}[]
 	 */
 	public Textify(String[] args) {
@@ -421,6 +420,8 @@ public class Textify extends ApplicationWindow {
 									getShell().close();
 								}
 							}
+						} else {
+							getShell().close();
 						}
 					}
 				}
