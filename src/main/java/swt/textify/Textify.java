@@ -27,6 +27,7 @@ import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.window.ApplicationWindow;
@@ -408,10 +409,13 @@ public class Textify extends ApplicationWindow {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				if ((e.stateMask & SWT.CTRL) != 0) {
-					if (e.keyCode == 115) { // ctrl+s
+					final String letter = Action.findKeyString(e.keyCode);
+					if (letter.equals("s")) { // ctrl+s = save
 						save();
-					} else if (e.keyCode == 119) { // ctrl+w
+					} else if (letter.equals("w")) { // ctrl+w = close
 						getShell().close();
+					} else if (letter.equals("a")) { // ctrl+a = select all
+						((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.SELECT_ALL);
 					}
 				}
 				super.keyReleased(e);
