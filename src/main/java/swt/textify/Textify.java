@@ -409,6 +409,8 @@ public class Textify extends ApplicationWindow {
 						getShell().close();
 					} else if (letter.equals("a")) { // ctrl+a = select all
 						((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.SELECT_ALL);
+					} else if (letter.equals("p")) { // ctrl+p = print
+						((ITextOperationTarget) viewer).doOperation(ITextOperationTarget.PRINT);
 					}
 				}
 				super.keyReleased(e);
