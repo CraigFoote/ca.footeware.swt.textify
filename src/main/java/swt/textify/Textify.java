@@ -182,16 +182,22 @@ public class Textify extends ApplicationWindow {
 		// load prefs from file
 		try {
 			preferenceStore.load();
+			initWidgets();
 		} catch (IOException e) {
 			LOGGER.log(Level.INFO, e);
 		}
+	}
 
+	/**
+	 * Initialize appropriate widgets to their value in preferences.
+	 */
+	private void initWidgets() {
 		// set text wrap
-		boolean wrapProperty = preferenceStore.getBoolean("Wrap");
+		final boolean wrapProperty = preferenceStore.getBoolean("Wrap");
 		viewer.getTextWidget().setWordWrap(wrapProperty);
 
 		// set text font
-		String fontProperty = preferenceStore.getString("Font");
+		final String fontProperty = preferenceStore.getString("Font");
 		if (fontProperty != null && !fontProperty.isEmpty()) {
 			try {
 				FontData fontData = FontUtils.getFontData(fontProperty);
@@ -405,24 +411,7 @@ public class Textify extends ApplicationWindow {
 					if (e.keyCode == 115) { // ctrl+s
 						save();
 					} else if (e.keyCode == 119) { // ctrl+w
-						if (textChanged) {
-							final MessageBox box = new MessageBox(getShell(),
-									SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
-							box.setText("Save");
-							box.setMessage("Text has been modified. Would you like to save it before closing?");
-							int response = box.open();
-							if (response == SWT.CANCEL) {
-								return;
-							} else if (response == SWT.NO) {
-								getShell().close();
-							} else {
-								if (save()) {
-									getShell().close();
-								}
-							}
-						} else {
-							getShell().close();
-						}
+						getShell().close();
 					}
 				}
 				super.keyReleased(e);
