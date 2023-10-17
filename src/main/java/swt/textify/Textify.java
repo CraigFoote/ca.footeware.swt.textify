@@ -64,23 +64,23 @@ public class Textify extends ApplicationWindow {
 
 	private static final String APP_NAME = "textify";
 	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
-	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private static final Logger LOGGER = LogManager.getLogger(Textify.class);
-	private Image newImage;
-	private Image openImage;
-	private Image saveImage;
-	private Image saveAsImage;
-	private Image menuImage;
-	private Composite statusbar;
-	private Label filenameLabel;
-	private Label numCharsLabel;
-	private ITextViewer viewer;
-	private boolean textChanged = false;
-	private File currentFile;
-	private PreferenceStore preferenceStore;
-	private PreferenceManager preferenceManager;
-	private Font font;
+	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private String[] args;
+	private File currentFile;
+	private Label filenameLabel;
+	private Font font;
+	private Image menuImage;
+	private Image newImage;
+	private Label numCharsLabel;
+	private Image openImage;
+	private PreferenceManager preferenceManager;
+	private PreferenceStore preferenceStore;
+	private Image saveAsImage;
+	private Image saveImage;
+	private Composite statusbar;
+	private boolean textChanged = false;
+	private ITextViewer viewer;
 
 	/**
 	 * @constructor
@@ -129,6 +129,26 @@ public class Textify extends ApplicationWindow {
 		filenameLabel.setText("");
 		numCharsLabel.setText("0 chars");
 		getShell().setText(APP_NAME);
+	}
+
+	@Override
+	public boolean close() {
+		if (textChanged) {
+			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
+			box.setText("Save");
+			box.setMessage("Text has been modified. Would you like to save it before closing?");
+			int response = box.open();
+			if (response == SWT.CANCEL) {
+				return false;
+			} else if (response == SWT.NO) {
+				return super.close();
+			} else {
+				if (!save()) {
+					return false;
+				}
+			}
+		}
+		return super.close();
 	}
 
 	/**
@@ -184,30 +204,6 @@ public class Textify extends ApplicationWindow {
 		}
 	}
 
-	/**
-	 * Initialize appropriate widgets to their value in preferences.
-	 */
-	private void initWidgets() {
-		// set text wrap
-		final boolean wrapProperty = preferenceStore.getBoolean("Wrap");
-		viewer.getTextWidget().setWordWrap(wrapProperty);
-
-		// set text font
-		final String fontProperty = preferenceStore.getString("Font");
-		if (fontProperty != null && !fontProperty.isEmpty()) {
-			try {
-				FontData fontData = FontUtils.getFontData(fontProperty);
-				if (font != null) {
-					font.dispose();
-				}
-				font = new Font(getShell().getDisplay(), fontData);
-				viewer.getTextWidget().setFont(font);
-			} catch (FontException e) {
-				showError("An error occurred getting font from preferences.", e);
-			}
-		}
-	}
-
 	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
@@ -242,28 +238,7 @@ public class Textify extends ApplicationWindow {
 		configurePreferences();
 		handleCliArgs();
 		createContextMenu();
-		createDisposeListener();
 		return parent;
-	}
-
-	/**
-	 * Handle window closing when text has been modified.
-	 */
-	private void createDisposeListener() {
-		getShell().addDisposeListener(e -> {
-			if (textChanged) {
-				final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.ICON_QUESTION);
-				box.setText("Save");
-				box.setMessage("Text has been modified. Would you like to save it before closing?");
-				if (box.open() == SWT.NO) {
-					getShell().close();
-				} else {
-					if (save()) {
-						getShell().close();
-					}
-				}
-			}
-		});
 	}
 
 	/**
@@ -498,6 +473,30 @@ public class Textify extends ApplicationWindow {
 			} else {
 				LOGGER.log(Level.DEBUG, "Loading file.");
 				loadFile(file);
+			}
+		}
+	}
+
+	/**
+	 * Initialize appropriate widgets to their value in preferences.
+	 */
+	private void initWidgets() {
+		// set text wrap
+		final boolean wrapProperty = preferenceStore.getBoolean("Wrap");
+		viewer.getTextWidget().setWordWrap(wrapProperty);
+
+		// set text font
+		final String fontProperty = preferenceStore.getString("Font");
+		if (fontProperty != null && !fontProperty.isEmpty()) {
+			try {
+				FontData fontData = FontUtils.getFontData(fontProperty);
+				if (font != null) {
+					font.dispose();
+				}
+				font = new Font(getShell().getDisplay(), fontData);
+				viewer.getTextWidget().setFont(font);
+			} catch (FontException e) {
+				showError("An error occurred getting font from preferences.", e);
 			}
 		}
 	}
