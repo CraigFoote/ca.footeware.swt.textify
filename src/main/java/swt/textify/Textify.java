@@ -25,14 +25,24 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.FindReplaceDocumentAdapter;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -206,6 +216,7 @@ public class Textify extends ApplicationWindow {
 				showError("An error occurred getting font from preferences.", e);
 			}
 		}
+		viewer.getTextWidget().setFocus();
 	}
 
 	@Override
@@ -389,15 +400,51 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void createTextViewer() {
 		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(800, 600)
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(640, 480)
 				.applyTo(viewer.getTextWidget());
 		viewer.setDocument(new Document());
+
+		// selection listener
+		viewer.getTextWidget().addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
+				if (selection != null && !selection.isEmpty()) {
+					final int offset = e.x;
+					System.out.println("offset=" + offset);
+					final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
+					try {
+						final IRegion region = finder.find(0, selection.getText(), true, false, false, false);
+						System.out.println("region=" + region);
+						if (region != null) {
+							// create a new set of styles
+							final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_BLACK);
+							final Color bgColor = new Color(getShell().getDisplay(), 242, 242, 140);
+							final TextPresentation presentation = new TextPresentation();
+							final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
+							presentation.addStyleRange(new StyleRange(region.getOffset(), region.getLength(),
+									attr.getForeground(), attr.getBackground()));
+							viewer.changeTextPresentation(presentation, true);
+							bgColor.dispose();
+						}
+					} catch (BadLocationException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+
+		// text listener
 		viewer.addTextListener(event -> {
 			textChanged = true;
-			getShell().setText("* " + getShell().getText().replace("* ", ""));
+			// set shell title and # chars label
+			getShell().setText("* " + getShell().getText().replaceFirst("\\* ", ""));
 			numCharsLabel.setText(viewer.getDocument().get().length() + " chars");
 			statusbar.layout(true);
 		});
+
+		// key listener
 		viewer.getTextWidget().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -416,7 +463,6 @@ public class Textify extends ApplicationWindow {
 				super.keyReleased(e);
 			}
 		});
-		viewer.getTextWidget().setFocus();
 	}
 
 	/**
@@ -534,6 +580,7 @@ public class Textify extends ApplicationWindow {
 			textChanged = false;
 			filenameLabel.setText(file.getAbsolutePath());
 			getShell().setText(file.getName());
+			viewer.getTextWidget().setFocus();
 		} catch (IOException | IllegalArgumentException e) {
 			showError("An error occurred loading the file.", e);
 		}
