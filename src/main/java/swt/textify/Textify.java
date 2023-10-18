@@ -374,7 +374,7 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void createTextViewer() {
 		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(800, 600)
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(640, 480)
 				.applyTo(viewer.getTextWidget());
 		viewer.setDocument(new Document());
 		viewer.addTextListener(event -> {
