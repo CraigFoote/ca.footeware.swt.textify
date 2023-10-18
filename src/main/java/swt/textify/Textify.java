@@ -214,34 +214,6 @@ public class Textify extends ApplicationWindow {
 		}
 	}
 
-<<<<<<< HEAD
-	/**
-	 * Initialize appropriate widgets to their value in preferences.
-	 */
-	private void initWidgets() {
-		// set text wrap
-		final boolean wrapProperty = preferenceStore.getBoolean("Wrap");
-		viewer.getTextWidget().setWordWrap(wrapProperty);
-
-		// set text font
-		final String fontProperty = preferenceStore.getString("Font");
-		if (fontProperty != null && !fontProperty.isEmpty()) {
-			try {
-				FontData fontData = FontUtils.getFontData(fontProperty);
-				if (font != null) {
-					font.dispose();
-				}
-				font = new Font(getShell().getDisplay(), fontData);
-				viewer.getTextWidget().setFont(font);
-			} catch (FontException e) {
-				showError("An error occurred getting font from preferences.", e);
-			}
-		}
-		viewer.getTextWidget().setFocus();
-	}
-
-=======
->>>>>>> refs/heads/master
 	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
@@ -300,7 +272,7 @@ public class Textify extends ApplicationWindow {
 
 		newImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "new.png"));
 		Button button = createButton(leftToolBar, "New", newImage, "Start a new document");
-		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).hint(100, 50).applyTo(button);
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).hint(80, 30).applyTo(button);
 		button.addListener(SWT.Selection, event -> newFile());
 
 		openImage = new Image(getShell().getDisplay(), Textify.class.getResourceAsStream(IMAGE_PATH + "open.png"));
@@ -363,7 +335,7 @@ public class Textify extends ApplicationWindow {
 		InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "menu.png");
 		menuImage = new Image(getShell().getDisplay(), in);
 		menuButton.setImage(menuImage);
-		GridDataFactory.swtDefaults().hint(50, 50).align(SWT.FILL, SWT.FILL).applyTo(menuButton);
+		GridDataFactory.swtDefaults().hint(40, 30).align(SWT.FILL, SWT.FILL).applyTo(menuButton);
 		menuButton.addListener(SWT.Selection, event -> {
 			Rectangle rect = menuButton.getBounds();
 			Point pt = new Point(rect.x, rect.y + rect.height);
