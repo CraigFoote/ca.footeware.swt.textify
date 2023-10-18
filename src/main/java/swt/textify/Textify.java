@@ -376,13 +376,52 @@ public class Textify extends ApplicationWindow {
 		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(640, 480)
 				.applyTo(viewer.getTextWidget());
+
 		viewer.setDocument(new Document());
+		final TextPresentation presentation = new TextPresentation();
+
+		// selection listener
+		viewer.getTextWidget().addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
+				// clear styles
+				System.out.println("clearing");
+				presentation.clear();
+				if (selection != null && !selection.isEmpty()) {
+					final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
+					try {
+						System.out.println("finding " + selection.getText());
+						final IRegion region = finder.find(0, selection.getText(), true, false, false, false);
+						System.out.println("region " + region);
+						if (region != null) {
+							// create a new style
+							final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
+							final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
+							final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
+							final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
+									attr.getForeground(), attr.getBackground());
+							System.out.println("styleRange " + styleRange);
+							presentation.addStyleRange(styleRange);
+						}
+					} catch (BadLocationException e1) {
+						LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
+					}
+				}
+				TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
+			}
+		});
+
+		// text listener
 		viewer.addTextListener(event -> {
 			textChanged = true;
-			getShell().setText("* " + getShell().getText().replace("* ", ""));
+			// set shell title and # chars label
+			getShell().setText("* " + getShell().getText().replaceFirst("\\* ", ""));
 			numCharsLabel.setText(viewer.getDocument().get().length() + " chars");
 			statusbar.layout(true);
 		});
+
+		// key listener
 		viewer.getTextWidget().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -401,7 +440,6 @@ public class Textify extends ApplicationWindow {
 				super.keyReleased(e);
 			}
 		});
-		viewer.getTextWidget().setFocus();
 	}
 
 	/**
