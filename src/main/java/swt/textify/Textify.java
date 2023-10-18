@@ -386,24 +386,28 @@ public class Textify extends ApplicationWindow {
 			public void widgetSelected(SelectionEvent e) {
 				final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
 				// clear styles
-				System.out.println("clearing");
 				presentation.clear();
 				if (selection != null && !selection.isEmpty()) {
 					final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
 					try {
 						System.out.println("finding " + selection.getText());
-						final IRegion region = finder.find(0, selection.getText(), true, false, false, false);
-						System.out.println("region " + region);
-						if (region != null) {
+						IRegion region = null;
+						int startIndex = 0;
+						final int docLength = viewer.getDocument().getLength();
+						do {
+							region = finder.find(startIndex, selection.getText(), true, false, false, false);
+							if (region == null) {
+								break;
+							}
+							startIndex = region.getOffset() + region.getLength();
 							// create a new style
 							final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
 							final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
 							final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
 							final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
 									attr.getForeground(), attr.getBackground());
-							System.out.println("styleRange " + styleRange);
 							presentation.addStyleRange(styleRange);
-						}
+						} while (region != null && startIndex < docLength);
 					} catch (BadLocationException e1) {
 						LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
 					}
