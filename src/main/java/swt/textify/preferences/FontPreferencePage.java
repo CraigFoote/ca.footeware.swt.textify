@@ -25,10 +25,10 @@ import swt.textify.exceptions.FontException;
  */
 public class FontPreferencePage extends PreferencePage {
 
-	private static final Logger LOGGER = LogManager.getLogger(FontPreferencePage.class);
 	private static final String FONT_PROPERTY_NAME = "Font";
-	private Label fontLabel;
+	private static final Logger LOGGER = LogManager.getLogger(FontPreferencePage.class);
 	private Font font;
+	private Label fontLabel;
 
 	/**
 	 * Constructor.

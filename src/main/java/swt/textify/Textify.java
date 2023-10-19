@@ -75,6 +75,7 @@ import swt.textify.preferences.WrapPreferencePage;
 public class Textify extends ApplicationWindow {
 
 	private static final String APP_NAME = "textify";
+	private static final String HIGHLIGHT = "Highlight";
 	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
 	private static final Logger LOGGER = LogManager.getLogger(Textify.class);
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
@@ -88,12 +89,12 @@ public class Textify extends ApplicationWindow {
 	private Image openImage;
 	private PreferenceManager preferenceManager;
 	private PreferenceStore preferenceStore;
+	private IPropertyChangeListener propertyChangeListener;
 	private Image saveAsImage;
 	private Image saveImage;
 	private Composite statusbar;
 	private boolean textChanged = false;
 	private ITextViewer viewer;
-	private IPropertyChangeListener propertyChangeListener;
 
 	/**
 	 * @constructor
@@ -190,7 +191,7 @@ public class Textify extends ApplicationWindow {
 		PreferenceNode wrapNode = new PreferenceNode("Wrap", "Wrap", null, WrapPreferencePage.class.getName());
 		preferenceManager.addToRoot(wrapNode);
 
-		PreferenceNode highlightNode = new PreferenceNode("Highlight", "Highlight", null,
+		PreferenceNode highlightNode = new PreferenceNode(HIGHLIGHT, HIGHLIGHT, null,
 				HighlightPreferencePage.class.getName());
 		preferenceManager.addToRoot(highlightNode);
 
@@ -211,7 +212,7 @@ public class Textify extends ApplicationWindow {
 		// defaults
 		preferenceStore.setDefault("Font", Display.getDefault().getSystemFont().getFontData()[0].toString());
 		preferenceStore.setDefault("Wrap", true);
-		preferenceStore.setDefault("Highlight", false);
+		preferenceStore.setDefault(HIGHLIGHT, false);
 
 		preferenceStore.addPropertyChangeListener(propertyChangeListener);
 
@@ -432,48 +433,6 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
-	 * Highlight all occurrences of selected text based on preference.
-	 * 
-	 * @param presentation {@link TextPresentation}
-	 */
-	protected void highlightText(final TextPresentation presentation) {
-		if (!preferenceStore.getBoolean("Highlight")) {
-			presentation.clear();
-			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
-		} else {
-			final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
-			// clear styles
-			presentation.clear();
-			if (selection != null && !selection.isEmpty()) {
-				final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
-				try {
-					IRegion region = null;
-					int startIndex = 0;
-					final int docLength = viewer.getDocument().getLength();
-					do {
-						// find selected text
-						region = finder.find(startIndex, selection.getText(), true, false, false, false);
-						if (region == null) {
-							break;
-						}
-						startIndex = region.getOffset() + region.getLength();
-						// create a new style
-						final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
-						final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
-						final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
-						final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
-								attr.getForeground(), attr.getBackground());
-						presentation.addStyleRange(styleRange);
-					} while (region != null && startIndex < docLength);
-				} catch (BadLocationException e1) {
-					LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
-				}
-			}
-			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
-		}
-	}
-
-	/**
 	 * Disposes the images
 	 */
 	private void dispose() {
@@ -490,6 +449,43 @@ public class Textify extends ApplicationWindow {
 			menuImage.dispose();
 		if (font != null)
 			font.dispose();
+	}
+
+	/**
+	 * Perform the actual highlighting.
+	 * 
+	 * @param presentation {@link TextPresentation}
+	 */
+	private void doHighlight(TextPresentation presentation) {
+		final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
+		// clear styles
+		presentation.clear();
+		if (selection != null && !selection.isEmpty()) {
+			final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
+			try {
+				IRegion region = null;
+				int startIndex = 0;
+				final int docLength = viewer.getDocument().getLength();
+				do {
+					// find selected text
+					region = finder.find(startIndex, selection.getText(), true, false, false, false);
+					if (region == null) {
+						break;
+					}
+					startIndex = region.getOffset() + region.getLength();
+					// create a new style
+					final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
+					final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
+					final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
+					final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
+							attr.getForeground(), attr.getBackground());
+					presentation.addStyleRange(styleRange);
+				} while (region != null && startIndex < docLength);
+			} catch (BadLocationException e1) {
+				LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
+			}
+		}
+		TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
 	}
 
 	/**
@@ -554,6 +550,20 @@ public class Textify extends ApplicationWindow {
 				LOGGER.log(Level.DEBUG, "Loading file.");
 				loadFile(file);
 			}
+		}
+	}
+
+	/**
+	 * Highlight all occurrences of selected text based on preference.
+	 * 
+	 * @param presentation {@link TextPresentation}
+	 */
+	protected void highlightText(final TextPresentation presentation) {
+		if (!preferenceStore.getBoolean(HIGHLIGHT)) {
+			presentation.clear();
+			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
+		} else {
+			doHighlight(presentation);
 		}
 	}
 
