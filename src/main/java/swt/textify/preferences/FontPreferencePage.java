@@ -25,10 +25,10 @@ import swt.textify.exceptions.FontException;
  */
 public class FontPreferencePage extends PreferencePage {
 
-	private static final Logger LOGGER = LogManager.getLogger(FontPreferencePage.class);
 	private static final String FONT_PROPERTY_NAME = "Font";
-	private Label fontLabel;
+	private static final Logger LOGGER = LogManager.getLogger(FontPreferencePage.class);
 	private Font font;
+	private Label fontLabel;
 
 	/**
 	 * Constructor.
@@ -43,6 +43,7 @@ public class FontPreferencePage extends PreferencePage {
 	/**
 	 * Creates the controls for this page
 	 */
+	@Override
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.swtDefaults().numColumns(2).extendedMargins(25, 25, 25, 25).equalWidth(false)
