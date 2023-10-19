@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.StatusLineManager;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -49,14 +50,11 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -81,18 +79,15 @@ public class Textify extends ApplicationWindow {
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private String[] args;
 	private File currentFile;
-	private Label filenameLabel;
 	private Font font;
 	private Image menuImage;
 	private Image newImage;
-	private Label numCharsLabel;
 	private Image openImage;
 	private PreferenceManager preferenceManager;
 	private PreferenceStore preferenceStore;
 	private IPropertyChangeListener propertyChangeListener;
 	private Image saveAsImage;
 	private Image saveImage;
-	private Composite statusbar;
 	private boolean textChanged = false;
 	private ITextViewer viewer;
 
@@ -102,6 +97,7 @@ public class Textify extends ApplicationWindow {
 	 */
 	public Textify(String[] args) {
 		super(null);
+		addStatusLine();
 		this.args = args;
 		setBlockOnOpen(true);
 		open();
@@ -140,8 +136,7 @@ public class Textify extends ApplicationWindow {
 		viewer.getDocument().set("");
 		currentFile = null;
 		textChanged = false;
-		filenameLabel.setText("");
-		numCharsLabel.setText("0 chars");
+		getStatusLineManager().setMessage("");
 		getShell().setText(APP_NAME);
 	}
 
@@ -163,20 +158,6 @@ public class Textify extends ApplicationWindow {
 			}
 		}
 		return super.close();
-	}
-
-	/**
-	 * Configure the provided composite.
-	 *
-	 * @param parent {@link Composite}
-	 */
-	private void configureParent(Composite parent) {
-		Control[] children = parent.getChildren();
-		if (children.length > 0 && children[0] != null && !children[0].isDisposed()) {
-			parent.getChildren()[0].dispose(); // why is there a label here?
-		}
-		GridDataFactory.swtDefaults().grab(true, true).align(SWT.FILL, SWT.FILL).applyTo(parent);
-		GridLayoutFactory.swtDefaults().numColumns(2).equalWidth(false).applyTo(parent);
 	}
 
 	/**
@@ -251,11 +232,12 @@ public class Textify extends ApplicationWindow {
 
 	@Override
 	protected Control createContents(Composite parent) {
-		configureParent(parent);
-		createLeftToolbar();
-		createRightToolbar();
-		createTextViewer();
-		createStatusbar();
+		Composite container = new Composite(parent, SWT.NONE);
+		GridDataFactory.swtDefaults().grab(true, true).align(SWT.FILL, SWT.FILL).applyTo(container);
+		GridLayoutFactory.swtDefaults().numColumns(2).equalWidth(false).applyTo(container);
+		createLeftToolbar(container);
+		createRightToolbar(container);
+		createTextViewer(container);
 		configurePreferences();
 		handleCliArgs();
 		createContextMenu();
@@ -275,9 +257,11 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Create the left-most toolbar with its buttons.
+	 *
+	 * @param parent {@link Composite}
 	 */
-	private void createLeftToolbar() {
-		final Composite leftToolBar = new Composite(getShell(), SWT.NONE);
+	private void createLeftToolbar(Composite parent) {
+		final Composite leftToolBar = new Composite(parent, SWT.NONE);
 		GridDataFactory.swtDefaults().align(SWT.LEFT, SWT.FILL).grab(false, false).applyTo(leftToolBar);
 		GridLayoutFactory.swtDefaults().numColumns(4).equalWidth(true).applyTo(leftToolBar);
 
@@ -304,10 +288,12 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Create the right-most toolbar with its buttons.
+	 * 
+	 * @param parent {@link Composite}
 	 */
-	private void createRightToolbar() {
+	private void createRightToolbar(Composite parent) {
 		// right toolbar
-		final Composite rightToolBar = new Composite(getShell(), SWT.NONE);
+		final Composite rightToolBar = new Composite(parent, SWT.NONE);
 		GridDataFactory.swtDefaults().align(SWT.RIGHT, SWT.FILL).grab(false, false).applyTo(rightToolBar);
 		GridLayoutFactory.swtDefaults().applyTo(rightToolBar);
 
@@ -357,34 +343,23 @@ public class Textify extends ApplicationWindow {
 		rightToolBar.pack();
 	}
 
-	/**
-	 * Create the statusbar with its two labels.
-	 */
-	private void createStatusbar() {
-		// statusbar
-		statusbar = new Composite(getShell(), SWT.NONE);
-		GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-		statusbar.setLayoutData(gridData);
-		GridLayout gridLayout = new GridLayout(2, false);
-		statusbar.setLayout(gridLayout);
+	@Override
+	protected void createStatusLine(Shell shell) {
+		getStatusLineManager().createControl(shell);
+	}
 
-		// filename label
-		filenameLabel = new Label(statusbar, SWT.NONE);
-		gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		filenameLabel.setLayoutData(gridData);
-
-		// # chars
-		numCharsLabel = new Label(statusbar, SWT.NONE);
-		numCharsLabel.setText("0 chars");
-		gridData = new GridData(SWT.FILL, SWT.FILL, false, false);
-		numCharsLabel.setLayoutData(gridData);
+	@Override
+	protected StatusLineManager createStatusLineManager() {
+		return new StatusLineManager();
 	}
 
 	/**
 	 * Create the {@link TextViewer}.
+	 *
+	 * @param parent {@link Composite}
 	 */
-	private void createTextViewer() {
-		viewer = new TextViewer(getShell(), SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+	private void createTextViewer(Composite parent) {
+		viewer = new TextViewer(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(640, 480)
 				.applyTo(viewer.getTextWidget());
 
@@ -407,8 +382,6 @@ public class Textify extends ApplicationWindow {
 			textChanged = true;
 			// set shell title and # chars label
 			getShell().setText("* " + getShell().getText().replaceFirst("\\* ", ""));
-			numCharsLabel.setText(viewer.getDocument().get().length() + " chars");
-			statusbar.layout(true);
 		});
 
 		// key listener
@@ -433,7 +406,7 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
-	 * Disposes the images
+	 * Disposes the images and removes preferences listener.
 	 */
 	private void dispose() {
 		preferenceStore.removePropertyChangeListener(propertyChangeListener);
@@ -453,7 +426,7 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Perform the actual highlighting.
-	 * 
+	 *
 	 * @param presentation {@link TextPresentation}
 	 */
 	private void doHighlight(TextPresentation presentation) {
@@ -555,7 +528,7 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Highlight all occurrences of selected text based on preference.
-	 * 
+	 *
 	 * @param presentation {@link TextPresentation}
 	 */
 	protected void highlightText(final TextPresentation presentation) {
@@ -621,7 +594,7 @@ public class Textify extends ApplicationWindow {
 			viewer.getDocument().set(builder.toString());
 			currentFile = file;
 			textChanged = false;
-			filenameLabel.setText(file.getAbsolutePath());
+			getStatusLineManager().setMessage(file.getAbsolutePath());
 			getShell().setText(file.getName());
 			viewer.getTextWidget().setFocus();
 		} catch (IOException | IllegalArgumentException e) {
@@ -780,7 +753,7 @@ public class Textify extends ApplicationWindow {
 			writer.write(viewer.getDocument().get());
 			currentFile = file;
 			textChanged = false;
-			filenameLabel.setText(file.getAbsolutePath());
+			getStatusLineManager().setMessage(file.getAbsolutePath());
 			getShell().setText(file.getName());
 			return true;
 		} catch (IOException e) {

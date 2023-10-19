@@ -43,6 +43,7 @@ public class FontPreferencePage extends PreferencePage {
 	/**
 	 * Creates the controls for this page
 	 */
+	@Override
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.swtDefaults().numColumns(2).extendedMargins(25, 25, 25, 25).equalWidth(false)

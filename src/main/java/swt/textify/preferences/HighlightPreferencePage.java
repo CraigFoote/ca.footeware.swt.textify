@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package swt.textify.preferences;
 
@@ -13,7 +13,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * 
+ *
  */
 public class HighlightPreferencePage extends PreferencePage {
 
