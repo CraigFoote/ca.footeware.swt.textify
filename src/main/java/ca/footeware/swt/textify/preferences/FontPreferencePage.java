@@ -1,4 +1,4 @@
-package swt.textify.preferences;
+package ca.footeware.swt.textify.preferences;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Label;
 
-import swt.textify.exceptions.FontException;
+import ca.footeware.swt.textify.exceptions.FontException;
 
 /**
  * This class creates a preference page that allows the user to choose the

@@ -1,7 +1,7 @@
 /**
  *
  */
-package swt.textify.preferences;
+package ca.footeware.swt.textify.preferences;
 
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.IPreferenceStore;

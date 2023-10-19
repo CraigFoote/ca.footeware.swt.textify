@@ -1,7 +1,7 @@
 /**
  *
  */
-package swt.textify.exceptions;
+package ca.footeware.swt.textify.exceptions;
 
 /**
  *

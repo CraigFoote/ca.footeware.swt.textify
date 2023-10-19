@@ -1,7 +1,7 @@
 /**
  *
  */
-package swt.textify;
+package ca.footeware.swt.textify;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

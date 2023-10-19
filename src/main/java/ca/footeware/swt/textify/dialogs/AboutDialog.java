@@ -1,7 +1,7 @@
 /**
  *
  */
-package swt.textify.dialogs;
+package ca.footeware.swt.textify.dialogs;
 
 import java.io.IOException;
 import java.io.InputStream;

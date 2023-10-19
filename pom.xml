@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>ca.footeware</groupId>
-	<artifactId>swt.textify</artifactId>
-	<version>3.8.0-SNAPSHOT</version>
+	<artifactId>ca.footeware.swt.textify</artifactId>
+	<version>3.9.0-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
-		<exec.mainClass>swt.textify.Main</exec.mainClass>
+		<exec.mainClass>ca.footeware.swt.textify.Main</exec.mainClass>
 		<version>${project.version}</version>
 	</properties>
 
@@ -69,7 +69,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>swt.textify.Main</mainClass>
+							<mainClass>ca.footeware.swt.textify.Main</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
@@ -171,7 +171,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>swt.textify.Main</mainClass>
+							<mainClass>ca.footeware.swt.textify.Main</mainClass>
 							<addDefaultImplementationEntries>
 								true
 							</addDefaultImplementationEntries>
@@ -182,17 +182,10 @@
 		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>javaxt.com</id>
-			<url>https://www.javaxt.com/maven</url>
-		</repository>
-	</repositories>
-
 	<organization>
 		<name>Craig Foote</name>
 		<url>http://footeware.ca</url>
 	</organization>
-	<name>swt.textify</name>
+	<name>ca.footeware.swt.textify</name>
 	<url>https://github.com/CraigFoote/ca.footeware.swt.textify</url>
 </project>

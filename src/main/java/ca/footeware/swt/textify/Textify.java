@@ -1,7 +1,7 @@
 /**
  *
  */
-package swt.textify;
+package ca.footeware.swt.textify;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -60,12 +60,12 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
-import swt.textify.dialogs.AboutDialog;
-import swt.textify.exceptions.FontException;
-import swt.textify.preferences.FontPreferencePage;
-import swt.textify.preferences.FontUtils;
-import swt.textify.preferences.HighlightPreferencePage;
-import swt.textify.preferences.WrapPreferencePage;
+import ca.footeware.swt.textify.dialogs.AboutDialog;
+import ca.footeware.swt.textify.exceptions.FontException;
+import ca.footeware.swt.textify.preferences.FontPreferencePage;
+import ca.footeware.swt.textify.preferences.FontUtils;
+import ca.footeware.swt.textify.preferences.HighlightPreferencePage;
+import ca.footeware.swt.textify.preferences.WrapPreferencePage;
 
 /**
  *

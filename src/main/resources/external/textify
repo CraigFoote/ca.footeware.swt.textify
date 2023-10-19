@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -jar $HOME/.local/share/textify/swt.textify-*.jar "$@"
+java -jar $HOME/.local/share/textify/ca.footeware.swt.textify-*.jar "$@"
