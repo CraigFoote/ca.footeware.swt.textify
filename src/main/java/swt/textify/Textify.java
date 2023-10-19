@@ -35,6 +35,7 @@ import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -65,6 +66,7 @@ import swt.textify.dialogs.AboutDialog;
 import swt.textify.exceptions.FontException;
 import swt.textify.preferences.FontPreferencePage;
 import swt.textify.preferences.FontUtils;
+import swt.textify.preferences.HighlightPreferencePage;
 import swt.textify.preferences.WrapPreferencePage;
 
 /**
@@ -91,6 +93,7 @@ public class Textify extends ApplicationWindow {
 	private Composite statusbar;
 	private boolean textChanged = false;
 	private ITextViewer viewer;
+	private IPropertyChangeListener propertyChangeListener;
 
 	/**
 	 * @constructor
@@ -187,6 +190,10 @@ public class Textify extends ApplicationWindow {
 		PreferenceNode wrapNode = new PreferenceNode("Wrap", "Wrap", null, WrapPreferencePage.class.getName());
 		preferenceManager.addToRoot(wrapNode);
 
+		PreferenceNode highlightNode = new PreferenceNode("Highlight", "Highlight", null,
+				HighlightPreferencePage.class.getName());
+		preferenceManager.addToRoot(highlightNode);
+
 		// Set the preference store
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(System.getProperty("user.home"));
@@ -204,6 +211,9 @@ public class Textify extends ApplicationWindow {
 		// defaults
 		preferenceStore.setDefault("Font", Display.getDefault().getSystemFont().getFontData()[0].toString());
 		preferenceStore.setDefault("Wrap", true);
+		preferenceStore.setDefault("Highlight", false);
+
+		preferenceStore.addPropertyChangeListener(propertyChangeListener);
 
 		// load prefs from file
 		try {
@@ -380,41 +390,16 @@ public class Textify extends ApplicationWindow {
 		viewer.setDocument(new Document());
 		final TextPresentation presentation = new TextPresentation();
 
-		// selection listener
+		// highlighting selection listener
 		viewer.getTextWidget().addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
-				// clear styles
-				presentation.clear();
-				if (selection != null && !selection.isEmpty()) {
-					final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
-					try {
-						System.out.println("finding " + selection.getText());
-						IRegion region = null;
-						int startIndex = 0;
-						final int docLength = viewer.getDocument().getLength();
-						do {
-							region = finder.find(startIndex, selection.getText(), true, false, false, false);
-							if (region == null) {
-								break;
-							}
-							startIndex = region.getOffset() + region.getLength();
-							// create a new style
-							final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
-							final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
-							final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
-							final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
-									attr.getForeground(), attr.getBackground());
-							presentation.addStyleRange(styleRange);
-						} while (region != null && startIndex < docLength);
-					} catch (BadLocationException e1) {
-						LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
-					}
-				}
-				TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
+				highlightText(presentation);
 			}
 		});
+
+		// property change listener
+		propertyChangeListener = event -> highlightText(presentation);
 
 		// text listener
 		viewer.addTextListener(event -> {
@@ -447,9 +432,52 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
+	 * Highlight all occurrences of selected text based on preference.
+	 * 
+	 * @param presentation {@link TextPresentation}
+	 */
+	protected void highlightText(final TextPresentation presentation) {
+		if (!preferenceStore.getBoolean("Highlight")) {
+			presentation.clear();
+			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
+		} else {
+			final ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
+			// clear styles
+			presentation.clear();
+			if (selection != null && !selection.isEmpty()) {
+				final FindReplaceDocumentAdapter finder = new FindReplaceDocumentAdapter(viewer.getDocument());
+				try {
+					IRegion region = null;
+					int startIndex = 0;
+					final int docLength = viewer.getDocument().getLength();
+					do {
+						// find selected text
+						region = finder.find(startIndex, selection.getText(), true, false, false, false);
+						if (region == null) {
+							break;
+						}
+						startIndex = region.getOffset() + region.getLength();
+						// create a new style
+						final Color fgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE);
+						final Color bgColor = getShell().getDisplay().getSystemColor(SWT.COLOR_YELLOW);
+						final TextAttribute attr = new TextAttribute(fgColor, bgColor, 0);
+						final StyleRange styleRange = new StyleRange(region.getOffset(), region.getLength(),
+								attr.getForeground(), attr.getBackground());
+						presentation.addStyleRange(styleRange);
+					} while (region != null && startIndex < docLength);
+				} catch (BadLocationException e1) {
+					LOGGER.log(Level.ERROR, "An error occurred finding a region.", e1);
+				}
+			}
+			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
+		}
+	}
+
+	/**
 	 * Disposes the images
 	 */
 	private void dispose() {
+		preferenceStore.removePropertyChangeListener(propertyChangeListener);
 		if (newImage != null)
 			newImage.dispose();
 		if (openImage != null)
@@ -577,7 +605,7 @@ public class Textify extends ApplicationWindow {
 			final StringBuilder builder = new StringBuilder();
 			for (String line : allLines) {
 				builder.append(line);
-				builder.append("\n");
+				builder.append(System.lineSeparator());
 			}
 			// set in text widget
 			viewer.getDocument().set(builder.toString());
