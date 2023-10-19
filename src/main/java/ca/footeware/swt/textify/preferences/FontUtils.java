@@ -1,12 +1,12 @@
 /**
  *
  */
-package swt.textify.preferences;
+package ca.footeware.swt.textify.preferences;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
 
-import swt.textify.exceptions.FontException;
+import ca.footeware.swt.textify.exceptions.FontException;
 
 /**
  *
