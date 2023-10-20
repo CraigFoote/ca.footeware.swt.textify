@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.logging.log4j.Level;
@@ -19,6 +20,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.StatusLineManager;
+import org.eclipse.jface.layout.FillLayoutFactory;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -32,10 +34,14 @@ import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
+import org.eclipse.jface.text.source.CompositeRuler;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.IVerticalRulerColumn;
+import org.eclipse.jface.text.source.LineNumberRulerColumn;
+import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
@@ -65,6 +71,7 @@ import ca.footeware.swt.textify.exceptions.FontException;
 import ca.footeware.swt.textify.preferences.FontPreferencePage;
 import ca.footeware.swt.textify.preferences.FontUtils;
 import ca.footeware.swt.textify.preferences.HighlightPreferencePage;
+import ca.footeware.swt.textify.preferences.LineNumberPreferencePage;
 import ca.footeware.swt.textify.preferences.WrapPreferencePage;
 
 /**
@@ -73,10 +80,13 @@ import ca.footeware.swt.textify.preferences.WrapPreferencePage;
 public class Textify extends ApplicationWindow {
 
 	private static final String APP_NAME = "textify";
-	private static final String HIGHLIGHT = "Highlight";
+	private static final String FONT_PROPERTY_NAME = "Font";
+	private static final String HIGHLIGHT_PROPERTY_NAME = "Highlight";
 	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
+	private static final String LINE_NUMBER_PROPERTY_NAME = "LineNumbers";
 	private static final Logger LOGGER = LogManager.getLogger(Textify.class);
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
+	private static final String WRAP_PROPERTY_NAME = "Wrap";
 	private String[] args;
 	private File currentFile;
 	private Font font;
@@ -86,10 +96,11 @@ public class Textify extends ApplicationWindow {
 	private PreferenceManager preferenceManager;
 	private PreferenceStore preferenceStore;
 	private IPropertyChangeListener propertyChangeListener;
+	private CompositeRuler ruler;
 	private Image saveAsImage;
 	private Image saveImage;
 	private boolean textChanged = false;
-	private ITextViewer viewer;
+	private ISourceViewer viewer;
 
 	/**
 	 * @constructor
@@ -166,15 +177,21 @@ public class Textify extends ApplicationWindow {
 	private void configurePreferences() {
 		preferenceManager = new PreferenceManager();
 
-		PreferenceNode fontNode = new PreferenceNode("Font", "Font", null, FontPreferencePage.class.getName());
+		PreferenceNode fontNode = new PreferenceNode(FONT_PROPERTY_NAME, "Font", null,
+				FontPreferencePage.class.getName());
 		preferenceManager.addToRoot(fontNode);
 
-		PreferenceNode wrapNode = new PreferenceNode("Wrap", "Wrap", null, WrapPreferencePage.class.getName());
+		PreferenceNode wrapNode = new PreferenceNode(WRAP_PROPERTY_NAME, "Wrap", null,
+				WrapPreferencePage.class.getName());
 		preferenceManager.addToRoot(wrapNode);
 
-		PreferenceNode highlightNode = new PreferenceNode(HIGHLIGHT, HIGHLIGHT, null,
+		PreferenceNode highlightNode = new PreferenceNode(HIGHLIGHT_PROPERTY_NAME, "Highlight", null,
 				HighlightPreferencePage.class.getName());
 		preferenceManager.addToRoot(highlightNode);
+
+		PreferenceNode lineNumberNode = new PreferenceNode(LINE_NUMBER_PROPERTY_NAME, "Line Numbers", null,
+				LineNumberPreferencePage.class.getName());
+		preferenceManager.addToRoot(lineNumberNode);
 
 		// Set the preference store
 		StringBuilder stringBuilder = new StringBuilder();
@@ -191,9 +208,11 @@ public class Textify extends ApplicationWindow {
 		preferenceStore = new PreferenceStore(storePath);
 
 		// defaults
-		preferenceStore.setDefault("Font", Display.getDefault().getSystemFont().getFontData()[0].toString());
-		preferenceStore.setDefault("Wrap", true);
-		preferenceStore.setDefault(HIGHLIGHT, false);
+		preferenceStore.setDefault(FONT_PROPERTY_NAME,
+				Display.getDefault().getSystemFont().getFontData()[0].toString());
+		preferenceStore.setDefault(WRAP_PROPERTY_NAME, true);
+		preferenceStore.setDefault(HIGHLIGHT_PROPERTY_NAME, false);
+		preferenceStore.setDefault(LINE_NUMBER_PROPERTY_NAME, true);
 
 		preferenceStore.addPropertyChangeListener(propertyChangeListener);
 
@@ -233,14 +252,14 @@ public class Textify extends ApplicationWindow {
 	@Override
 	protected Control createContents(Composite parent) {
 		Composite container = new Composite(parent, SWT.NONE);
-		GridDataFactory.swtDefaults().grab(true, true).align(SWT.FILL, SWT.FILL).applyTo(container);
-		GridLayoutFactory.swtDefaults().numColumns(2).equalWidth(false).applyTo(container);
-		createLeftToolbar(container);
-		createRightToolbar(container);
-		createTextViewer(container);
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(container);
+		GridLayoutFactory.swtDefaults().applyTo(container);
+		createToolbars(container);
+		createViewer(container);
 		configurePreferences();
 		handleCliArgs();
 		createContextMenu();
+		viewer.getTextWidget().setFocus();
 		return parent;
 	}
 
@@ -288,13 +307,13 @@ public class Textify extends ApplicationWindow {
 
 	/**
 	 * Create the right-most toolbar with its buttons.
-	 * 
+	 *
 	 * @param parent {@link Composite}
 	 */
 	private void createRightToolbar(Composite parent) {
 		// right toolbar
 		final Composite rightToolBar = new Composite(parent, SWT.NONE);
-		GridDataFactory.swtDefaults().align(SWT.RIGHT, SWT.FILL).grab(false, false).applyTo(rightToolBar);
+		GridDataFactory.swtDefaults().align(SWT.RIGHT, SWT.FILL).grab(true, false).applyTo(rightToolBar);
 		GridLayoutFactory.swtDefaults().applyTo(rightToolBar);
 
 		// menu for hamburger button
@@ -312,13 +331,6 @@ public class Textify extends ApplicationWindow {
 				preferenceStore.save();
 			} catch (IOException e) {
 				showError("An error occurred saving preferences.", e);
-			}
-			try {
-				viewer.getTextWidget().setWordWrap(preferenceStore.getBoolean("Wrap"));
-				viewer.getTextWidget().setFont(
-						new Font(getShell().getDisplay(), FontUtils.getFontData(preferenceStore.getString("Font"))));
-			} catch (FontException e) {
-				showError("An error occurred setting the viewer font.", e);
 			}
 		});
 
@@ -354,14 +366,29 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
+	 * Create the left and right toolbars.
+	 */
+	private void createToolbars(Composite parent) {
+		Composite container = new Composite(parent, SWT.NONE);
+		GridDataFactory.swtDefaults().grab(true, false).align(SWT.FILL, SWT.FILL).applyTo(container);
+		GridLayoutFactory.swtDefaults().numColumns(2).margins(0, 0).equalWidth(false).applyTo(container);
+		createLeftToolbar(container);
+		createRightToolbar(container);
+	}
+
+	/**
 	 * Create the {@link TextViewer}.
 	 *
 	 * @param parent {@link Composite}
 	 */
-	private void createTextViewer(Composite parent) {
-		viewer = new TextViewer(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).span(2, 1).hint(640, 480)
-				.applyTo(viewer.getTextWidget());
+	private void createViewer(Composite parent) {
+		final Composite container = new Composite(parent, SWT.NONE);
+		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).hint(640, 480).applyTo(container);
+		FillLayoutFactory.fillDefaults().applyTo(container);
+
+		// viewer with ruler based on prefs
+		ruler = new CompositeRuler();
+		viewer = new SourceViewer(container, ruler, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 
 		viewer.setDocument(new Document());
 		final TextPresentation presentation = new TextPresentation();
@@ -375,7 +402,7 @@ public class Textify extends ApplicationWindow {
 		});
 
 		// property change listener
-		propertyChangeListener = event -> highlightText(presentation);
+		propertyChangeListener = getPreferenceListener(presentation);
 
 		// text listener
 		viewer.addTextListener(event -> {
@@ -410,18 +437,24 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void dispose() {
 		preferenceStore.removePropertyChangeListener(propertyChangeListener);
-		if (newImage != null)
+		if (newImage != null) {
 			newImage.dispose();
-		if (openImage != null)
+		}
+		if (openImage != null) {
 			openImage.dispose();
-		if (saveImage != null)
+		}
+		if (saveImage != null) {
 			saveImage.dispose();
-		if (saveAsImage != null)
+		}
+		if (saveAsImage != null) {
 			saveAsImage.dispose();
-		if (menuImage != null)
+		}
+		if (menuImage != null) {
 			menuImage.dispose();
-		if (font != null)
+		}
+		if (font != null) {
 			font.dispose();
+		}
 	}
 
 	/**
@@ -493,6 +526,47 @@ public class Textify extends ApplicationWindow {
 		});
 	}
 
+	private IPropertyChangeListener getPreferenceListener(final TextPresentation presentation) {
+		return event -> {
+			final String propertyName = event.getProperty();
+			switch (propertyName) {
+			case HIGHLIGHT_PROPERTY_NAME:
+				highlightText(presentation);
+				break;
+			case WRAP_PROPERTY_NAME:
+				viewer.getTextWidget().setWordWrap((boolean) event.getNewValue());
+				break;
+			case LINE_NUMBER_PROPERTY_NAME:
+				if ((boolean) event.getNewValue()) {
+					final LineNumberRulerColumn numbers = new LineNumberRulerColumn();
+					numbers.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_LIST_SELECTION));
+					numbers.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+					ruler.addDecorator(0, numbers);
+				} else {
+					Iterator<IVerticalRulerColumn> iterator = ruler.getDecoratorIterator();
+					int index = 0;
+					while (iterator.hasNext()) {
+						ruler.removeDecorator(index++);
+					}
+				}
+				break;
+			case FONT_PROPERTY_NAME:
+				try {
+					final FontData fontData = FontUtils.getFontData((String) event.getNewValue());
+					font = new Font(getShell().getDisplay(), fontData);
+					viewer.getTextWidget().setFont(font);
+					ruler.setFont(font);
+					ruler.relayout();
+				} catch (FontException e1) {
+					LOGGER.log(Level.ERROR, "An error occurred getting font from preferences.", e1);
+				}
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown property: " + propertyName);
+			}
+		};
+	}
+
 	/**
 	 * Handle command line arguments.
 	 */
@@ -532,7 +606,7 @@ public class Textify extends ApplicationWindow {
 	 * @param presentation {@link TextPresentation}
 	 */
 	protected void highlightText(final TextPresentation presentation) {
-		if (!preferenceStore.getBoolean(HIGHLIGHT)) {
+		if (!preferenceStore.getBoolean(HIGHLIGHT_PROPERTY_NAME)) {
 			presentation.clear();
 			TextPresentation.applyTextPresentation(presentation, viewer.getTextWidget());
 		} else {
@@ -553,13 +627,26 @@ public class Textify extends ApplicationWindow {
 		if (fontProperty != null && !fontProperty.isEmpty()) {
 			try {
 				FontData fontData = FontUtils.getFontData(fontProperty);
-				if (font != null) {
-					font.dispose();
-				}
 				font = new Font(getShell().getDisplay(), fontData);
 				viewer.getTextWidget().setFont(font);
+				ruler.setFont(font);
+				ruler.relayout();
 			} catch (FontException e) {
 				showError("An error occurred getting font from preferences.", e);
+			}
+		}
+
+		// set line numbers
+		if (preferenceStore.getBoolean(LINE_NUMBER_PROPERTY_NAME)) {
+			final LineNumberRulerColumn numbers = new LineNumberRulerColumn();
+			numbers.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_LIST_SELECTION));
+			numbers.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+			ruler.addDecorator(0, numbers);
+		} else {
+			final Iterator<IVerticalRulerColumn> iterator = ruler.getDecoratorIterator();
+			int index = 0;
+			while (iterator.hasNext()) {
+				ruler.removeDecorator(index++);
 			}
 		}
 	}

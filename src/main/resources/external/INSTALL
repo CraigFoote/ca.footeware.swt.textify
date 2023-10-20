@@ -37,8 +37,9 @@ echo -e "\e[0;32m Copying launcher to $HOME/.local/bin/. \e[0m"
 cp install-files/textify $HOME/.local/bin/
 echo
 # copy .desktop, updated with $HOME value
-echo -e "\e[0;32m Copying .desktop file to $HOME/.local/share/textify/. \e[0m"
+echo -e "\e[0;32m Copying .desktop file to $HOME/.local/share/applications/. \e[0m"
 sed "s,~,$HOME,g" install-files/textify.desktop > $HOME/.local/share/applications/textify.desktop
 echo
 echo -e "\e[0;32m Done \U1F44D \e[0m"
-read -p "Press any key to quit:"
+echo
+read -p "Press Enter to quit: "

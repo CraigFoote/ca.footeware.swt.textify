@@ -7,6 +7,10 @@
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="1"/>
     </listAttribute>
+    <listAttribute key="org.eclipse.eclemma.core.SCOPE_IDS">
+        <listEntry value="=swt.textify/src\/main\/resources=/maven.pomderived=/true=/=/optional=/true=/"/>
+        <listEntry value="=swt.textify/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/"/>
+    </listAttribute>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
