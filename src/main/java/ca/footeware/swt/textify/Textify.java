@@ -195,10 +195,15 @@ public class Textify extends ApplicationWindow {
 		imageProvider = new ImageProvider(getShell());
 		createToolbars(container, imageProvider);
 		createViewer(container);
-		createContextMenu();
-		configurePreferences();
-		handleCliArgs();
-		viewer.getTextWidget().setFocus();
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				createContextMenu();
+				configurePreferences();
+				handleCliArgs();
+				viewer.getTextWidget().setFocus();
+			}
+		});
 		return parent;
 	}
 
