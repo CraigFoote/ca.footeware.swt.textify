@@ -1,0 +1,20 @@
+/**
+ *
+ */
+package ca.footeware.swt.textify;
+
+/**
+ *
+ */
+public final class Constants {
+
+	public static final String APP_NAME = "textify";
+
+	public static final String FONT_PROPERTY_NAME = "Font";
+	public static final String HIGHLIGHT_PROPERTY_NAME = "Highlight";
+	public static final String LINE_NUMBER_PROPERTY_NAME = "LineNumbers";
+	public static final String WRAP_PROPERTY_NAME = "Wrap";
+
+	private Constants() {
+	}
+}
