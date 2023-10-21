@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package ca.footeware.swt.textify.preferences;
 
@@ -13,7 +13,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * 
+ * Allows a user to specify whether or not to highlight all occurrences of
+ * selected text.
  */
 public class LineNumberPreferencePage extends PreferencePage {
 
