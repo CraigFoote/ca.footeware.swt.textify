@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Display;
 
 import ca.footeware.swt.textify.Constants;
 import ca.footeware.swt.textify.preferences.FontPreferencePage;
-import ca.footeware.swt.textify.preferences.HighlightPreferencePage;
 import ca.footeware.swt.textify.preferences.LineNumberPreferencePage;
 import ca.footeware.swt.textify.preferences.WrapPreferencePage;
 
@@ -42,10 +41,6 @@ public class PreferenceProvider {
 		PreferenceNode wrapNode = new PreferenceNode(Constants.WRAP_PROPERTY_NAME, "Wrap", null,
 				WrapPreferencePage.class.getName());
 		preferenceManager.addToRoot(wrapNode);
-
-		PreferenceNode highlightNode = new PreferenceNode(Constants.HIGHLIGHT_PROPERTY_NAME, "Highlight", null,
-				HighlightPreferencePage.class.getName());
-		preferenceManager.addToRoot(highlightNode);
 
 		PreferenceNode lineNumberNode = new PreferenceNode(Constants.LINE_NUMBER_PROPERTY_NAME, "Line Numbers", null,
 				LineNumberPreferencePage.class.getName());

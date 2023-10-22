@@ -10,7 +10,6 @@ import org.eclipse.jface.text.source.LineNumberRulerColumn;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 
@@ -40,9 +39,6 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent event) {
 		final String propertyName = event.getProperty();
 		switch (propertyName) {
-		case Constants.HIGHLIGHT_PROPERTY_NAME:
-			textify.getHighlighter().highlightText(textify);
-			break;
 		case Constants.WRAP_PROPERTY_NAME:
 			textify.getViewer().getTextWidget().setWordWrap((boolean) event.getNewValue());
 			break;
@@ -63,10 +59,8 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 		case Constants.FONT_PROPERTY_NAME:
 			try {
 				final FontData fontData = FontUtils.getFontData((String) event.getNewValue());
-				textify.setFont(new Font(Display.getDefault(), fontData));
-				textify.getViewer().getTextWidget().setFont(textify.getViewerFont());
-				textify.getRuler().setFont(textify.getViewerFont());
-				textify.getRuler().relayout();
+				textify.setFont(fontData);
+				textify.getViewer().getTextWidget().setFocus();
 			} catch (FontException e1) {
 				LOGGER.log(Level.ERROR, "An error occurred getting font from preferences.", e1);
 			}
