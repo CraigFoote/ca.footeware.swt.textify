@@ -55,13 +55,12 @@ import org.eclipse.swt.widgets.Shell;
 
 import ca.footeware.swt.textify.dialogs.AboutDialog;
 import ca.footeware.swt.textify.exceptions.FontException;
-import ca.footeware.swt.textify.listeners.HighlightingSelectionListener;
 import ca.footeware.swt.textify.listeners.KeyListener;
 import ca.footeware.swt.textify.listeners.PreferenceChangeListener;
 import ca.footeware.swt.textify.preferences.FontUtils;
-import ca.footeware.swt.textify.processors.Highlighter;
 import ca.footeware.swt.textify.providers.ImageProvider;
 import ca.footeware.swt.textify.providers.PreferenceProvider;
+import ca.footeware.swt.textify.search.SearchBar;
 
 /**
  * A minimal text editor.
@@ -73,18 +72,19 @@ public class Textify extends ApplicationWindow {
 	private String[] args;
 	private File currentFile;
 	private Font font;
-	private final Highlighter highlighter = new Highlighter();
 	private ImageProvider imageProvider;
 	private PreferenceManager preferenceManager;
 	private PreferenceStore preferenceStore;
 	private TextPresentation presentation;
 	private IPropertyChangeListener propertyChangeListener;
 	private CompositeRuler ruler;
+	private SearchBar search;
 	private boolean textChanged = false;
 	private ISourceViewer viewer;
 
 	/**
-	 * @constructor
+	 * Constructor.
+	 *
 	 * @param args {@link String}[]
 	 */
 	public Textify(String[] args) {
@@ -160,7 +160,6 @@ public class Textify extends ApplicationWindow {
 		preferenceManager = preferenceProvider.getPreferenceManager();
 		preferenceStore = preferenceProvider.getPreferenceStore();
 		preferenceStore.addPropertyChangeListener(propertyChangeListener);
-		initWidgets();
 	}
 
 	@Override
@@ -195,14 +194,18 @@ public class Textify extends ApplicationWindow {
 		imageProvider = new ImageProvider(getShell());
 		createToolbars(container, imageProvider);
 		createViewer(container);
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				createContextMenu();
-				configurePreferences();
-				handleCliArgs();
-				viewer.getTextWidget().setFocus();
-			}
+
+		final Textify finalTextify = this;
+		Display.getDefault().asyncExec(() -> {
+			createContextMenu();
+			configurePreferences();
+			initWidgets();
+			search = new SearchBar(container, imageProvider, finalTextify);
+			search.setVisible(false);
+			GridDataFactory.swtDefaults().align(SWT.FILL, SWT.FILL).grab(true, false).exclude(true)
+					.applyTo(search.getControl());
+			handleCliArgs();
+			viewer.getTextWidget().setFocus();
 		});
 		return parent;
 	}
@@ -337,21 +340,18 @@ public class Textify extends ApplicationWindow {
 		viewer.setDocument(new Document());
 		presentation = new TextPresentation();
 
-		// highlighting selection listener
-		viewer.getTextWidget().addSelectionListener(new HighlightingSelectionListener(this));
-
 		// property change listener
 		propertyChangeListener = new PreferenceChangeListener(this);
+
+		// key listener
+		viewer.getTextWidget().addKeyListener(new KeyListener(this));
 
 		// text listener
 		viewer.addTextListener(event -> {
 			textChanged = true;
-			// set shell title and # chars label
+			// set shell title
 			getShell().setText("* " + getShell().getText().replaceFirst("\\* ", ""));
 		});
-
-		// key listener
-		viewer.getTextWidget().addKeyListener(new KeyListener(this));
 	}
 
 	/**
@@ -359,7 +359,7 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void dispose() {
 		preferenceStore.removePropertyChangeListener(propertyChangeListener);
-		if (font != null) {
+		if (font != null && !font.isDisposed()) {
 			font.dispose();
 		}
 		if (imageProvider != null) {
@@ -399,10 +399,6 @@ public class Textify extends ApplicationWindow {
 		});
 	}
 
-	public Highlighter getHighlighter() {
-		return highlighter;
-	}
-
 	/**
 	 * @return the preferenceManager
 	 */
@@ -429,6 +425,13 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
+	 * @return the search
+	 */
+	public SearchBar getSearch() {
+		return search;
+	}
+
+	/**
 	 * @return the viewer
 	 */
 	public ISourceViewer getViewer() {
@@ -436,7 +439,7 @@ public class Textify extends ApplicationWindow {
 	}
 
 	public Font getViewerFont() {
-		return font;
+		return viewer.getTextWidget().getFont();
 	}
 
 	/**
@@ -501,6 +504,7 @@ public class Textify extends ApplicationWindow {
 			numbers.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
 			ruler.addDecorator(0, numbers);
 		} else {
+			// remove all decorators including highlighter
 			final Iterator<IVerticalRulerColumn> iterator = ruler.getDecoratorIterator();
 			int index = 0;
 			while (iterator.hasNext()) {
@@ -674,8 +678,15 @@ public class Textify extends ApplicationWindow {
 		}
 	}
 
-	public void setFont(Font font) {
-		this.font = font;
+	public void setFont(FontData fontData) {
+		final Font newFont = new Font(getShell().getDisplay(), fontData);
+		viewer.getTextWidget().setFont(newFont);
+		if (this.font != null && !this.font.isDisposed()) {
+			this.font.dispose();
+		}
+		this.font = newFont;
+		ruler.setFont(newFont);
+		ruler.relayout();
 	}
 
 	/**

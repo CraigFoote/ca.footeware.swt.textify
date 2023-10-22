@@ -23,6 +23,7 @@ public class ImageProvider {
 	private Image openImage;
 	private Image saveAsImage;
 	private Image saveImage;
+	private Image searchImage;
 
 	/**
 	 * Constructor.
@@ -51,6 +52,9 @@ public class ImageProvider {
 		}
 		if (menuImage != null && !menuImage.isDisposed()) {
 			menuImage.dispose();
+		}
+		if (searchImage != null && !searchImage.isDisposed()) {
+			searchImage.dispose();
 		}
 	}
 
@@ -107,5 +111,16 @@ public class ImageProvider {
 			saveImage = new Image(Display.getDefault(), in);
 		}
 		return saveImage;
+	}
+
+	/**
+	 * @return the searchImage
+	 */
+	public Image getSearchImage() {
+		if (searchImage == null) {
+			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "search.png");
+			searchImage = new Image(Display.getDefault(), in);
+		}
+		return searchImage;
 	}
 }
