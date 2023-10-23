@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
 import ca.footeware.swt.textify.dialogs.AboutDialog;
+import ca.footeware.swt.textify.dialogs.KeyBindingsDialog;
 import ca.footeware.swt.textify.exceptions.FontException;
 import ca.footeware.swt.textify.listeners.KeyListener;
 import ca.footeware.swt.textify.listeners.PreferenceChangeListener;
@@ -280,10 +281,15 @@ public class Textify extends ApplicationWindow {
 			}
 		});
 
+		// Key bindings
+		MenuItem keyBindingsItem = new MenuItem(menu, SWT.PUSH);
+		keyBindingsItem.setText("Key Bindings");
+		keyBindingsItem.addListener(SWT.Selection, event -> new KeyBindingsDialog(getShell(), imageProvider).open());
+
 		// About menu
 		MenuItem aboutItem = new MenuItem(menu, SWT.PUSH);
 		aboutItem.setText("About");
-		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(getShell()).open());
+		aboutItem.addListener(SWT.Selection, event -> new AboutDialog(getShell(), imageProvider).open());
 
 		// hamburger
 		final Button menuButton = new Button(rightToolBar, SWT.NONE);
@@ -368,9 +374,9 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
-	 * Fill dynamic context menu
+	 * Fill dynamic context menu.
 	 *
-	 * @param contextMenu
+	 * @param contextMenu {@link IMenuManager}
 	 */
 	protected void fillContextMenu(IMenuManager contextMenu) {
 		// Cut
@@ -436,10 +442,6 @@ public class Textify extends ApplicationWindow {
 	 */
 	public ISourceViewer getViewer() {
 		return viewer;
-	}
-
-	public Font getViewerFont() {
-		return viewer.getTextWidget().getFont();
 	}
 
 	/**

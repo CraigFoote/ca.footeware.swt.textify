@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -25,16 +24,19 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.vaadin.open.Open;
 
+import ca.footeware.swt.textify.providers.ImageProvider;
+
 /**
  *
  */
 public class AboutDialog extends Dialog {
 
 	private static final Logger LOGGER = LogManager.getLogger(AboutDialog.class);
-	private Image programmerImage;
+	private ImageProvider imageProvider;
 
-	public AboutDialog(Shell parent) {
+	public AboutDialog(Shell parent, ImageProvider imageProvider) {
 		super(parent, SWT.APPLICATION_MODAL);
+		this.imageProvider = imageProvider;
 	}
 
 	private void createContents(final Shell shell) {
@@ -43,10 +45,8 @@ public class AboutDialog extends Dialog {
 		gridLayout.marginWidth = 10;
 		shell.setLayout(gridLayout);
 
-		final InputStream in = AboutDialog.class.getResourceAsStream("/images/programmer.jpg");
-		programmerImage = new Image(Display.getDefault(), in);
 		final Label label = new Label(shell, SWT.NONE);
-		label.setImage(programmerImage);
+		label.setImage(imageProvider.getProgrammerImage());
 
 		final Link link = new Link(shell, SWT.NONE);
 		link.setText("Another fine mess by <a href=\"http://footeware.ca\">Footeware.ca</a>");
@@ -102,12 +102,6 @@ public class AboutDialog extends Dialog {
 	public void open() {
 		final Shell shell = new Shell(getParent(), getStyle());
 		shell.setText(getText());
-		shell.addDisposeListener(e -> {
-			if (programmerImage != null) {
-				programmerImage.dispose();
-				programmerImage = null;
-			}
-		});
 		createContents(shell);
 		shell.pack();
 		shell.open();
