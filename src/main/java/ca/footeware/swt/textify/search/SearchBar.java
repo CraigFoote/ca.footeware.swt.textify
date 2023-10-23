@@ -177,7 +177,7 @@ public class SearchBar {
 		// exclude if not visible
 		GridData data = (GridData) container.getLayoutData();
 		data.exclude = !visible;
-		
+
 		// show/hide search bar
 		container.setVisible(visible);
 

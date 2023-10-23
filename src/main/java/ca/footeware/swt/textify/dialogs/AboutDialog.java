@@ -10,14 +10,16 @@ import java.util.Properties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
@@ -34,21 +36,35 @@ public class AboutDialog extends Dialog {
 	private static final Logger LOGGER = LogManager.getLogger(AboutDialog.class);
 	private ImageProvider imageProvider;
 
-	public AboutDialog(Shell parent, ImageProvider imageProvider) {
-		super(parent, SWT.APPLICATION_MODAL);
+	public AboutDialog(Shell parentShell, ImageProvider imageProvider) {
+		super(parentShell);
 		this.imageProvider = imageProvider;
 	}
 
-	private void createContents(final Shell shell) {
-		final GridLayout gridLayout = new GridLayout();
-		gridLayout.verticalSpacing = 20;
-		gridLayout.marginWidth = 10;
-		shell.setLayout(gridLayout);
+	@Override
+	protected Button createButton(Composite parent, int id, String label, boolean defaultButton) {
+		if (id == IDialogConstants.CANCEL_ID) {
+			return null;
+		}
+		Button button = super.createButton(parent, id, label, defaultButton);
+		button.setFocus();
+		return button;
+	}
 
-		final Label label = new Label(shell, SWT.NONE);
+	@Override
+	protected Control createDialogArea(Composite parent) {
+		Composite area = (Composite) super.createDialogArea(parent);
+
+		Composite container = new Composite(area, SWT.NONE);
+		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = 10;
+		container.setLayout(layout);
+
+		final Label label = new Label(container, SWT.NONE);
 		label.setImage(imageProvider.getProgrammerImage());
 
-		final Link link = new Link(shell, SWT.NONE);
+		final Link link = new Link(container, SWT.NONE);
 		link.setText("Another fine mess by <a href=\"http://footeware.ca\">Footeware.ca</a>");
 		GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
 		link.setLayoutData(gridData);
@@ -59,7 +75,7 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		final Link versionLink = new Link(shell, SWT.NONE);
+		final Link versionLink = new Link(container, SWT.NONE);
 		versionLink.setText(
 				"<a href=\"https://github.com/CraigFoote/ca.footeware.swt.textify/releases\">" + getVersion() + "</a>");
 		gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
@@ -71,20 +87,7 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		final Button button = new Button(shell, SWT.PUSH);
-		button.setText("Close");
-		gridData = new GridData(SWT.END, SWT.CENTER, true, false);
-		gridData.widthHint = 90;
-		button.setLayoutData(gridData);
-		button.setFocus();
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				shell.close();
-			}
-		});
-
-		shell.setDefaultButton(button);
+		return area;
 	}
 
 	private String getVersion() {
@@ -99,17 +102,8 @@ public class AboutDialog extends Dialog {
 		}
 	}
 
-	public void open() {
-		final Shell shell = new Shell(getParent(), getStyle());
-		shell.setText(getText());
-		createContents(shell);
-		shell.pack();
-		shell.open();
-		final Display display = getParent().getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
+	@Override
+	protected void setShellStyle(int newShellStyle) {
+		super.setShellStyle(SWT.APPLICATION_MODAL);
 	}
 }

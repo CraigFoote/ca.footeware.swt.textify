@@ -18,36 +18,14 @@ import ca.footeware.swt.textify.Textify;
 public class ImageProvider {
 
 	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
+	private Image keyboardImage;
 	private Image menuImage;
 	private Image newImage;
 	private Image openImage;
+	private Image programmerImage;
 	private Image saveAsImage;
 	private Image saveImage;
 	private Image searchImage;
-	private Image programmerImage;
-	private Image keyboardImage;
-
-	/**
-	 * @return the keyboardImage
-	 */
-	public Image getKeyboardImage() {
-		if (keyboardImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "keyboard.png");
-			keyboardImage = new Image(Display.getDefault(), in);
-		}
-		return keyboardImage;
-	}
-
-	/**
-	 * @return the programmerImage
-	 */
-	public Image getProgrammerImage() {
-		if (programmerImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "programmer.jpg");
-			programmerImage = new Image(Display.getDefault(), in);
-		}
-		return programmerImage;
-	}
 
 	/**
 	 * Constructor.
@@ -89,6 +67,17 @@ public class ImageProvider {
 	}
 
 	/**
+	 * @return the keyboardImage
+	 */
+	public Image getKeyboardImage() {
+		if (keyboardImage == null) {
+			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "keyboard.png");
+			keyboardImage = new Image(Display.getDefault(), in);
+		}
+		return keyboardImage;
+	}
+
+	/**
 	 * @return the menuImage
 	 */
 	public Image getMenuImage() {
@@ -119,6 +108,17 @@ public class ImageProvider {
 			openImage = new Image(Display.getDefault(), in);
 		}
 		return openImage;
+	}
+
+	/**
+	 * @return the programmerImage
+	 */
+	public Image getProgrammerImage() {
+		if (programmerImage == null) {
+			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "programmer.jpg");
+			programmerImage = new Image(Display.getDefault(), in);
+		}
+		return programmerImage;
 	}
 
 	/**
