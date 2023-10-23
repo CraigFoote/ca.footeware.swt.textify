@@ -556,7 +556,7 @@ public class Textify extends ApplicationWindow {
 	/**
 	 * Respond to the user pressing the New button.
 	 */
-	private void newFile() {
+	public void newFile() {
 		if (textChanged) {
 			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
@@ -573,7 +573,7 @@ public class Textify extends ApplicationWindow {
 	/**
 	 * Open a file.
 	 */
-	private void openFile() {
+	public void openFile() {
 		if (textChanged) {
 			// prompt user to save
 			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
