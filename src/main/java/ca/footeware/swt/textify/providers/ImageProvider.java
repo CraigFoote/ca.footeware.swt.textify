@@ -24,6 +24,30 @@ public class ImageProvider {
 	private Image saveAsImage;
 	private Image saveImage;
 	private Image searchImage;
+	private Image programmerImage;
+	private Image keyboardImage;
+
+	/**
+	 * @return the keyboardImage
+	 */
+	public Image getKeyboardImage() {
+		if (keyboardImage == null) {
+			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "keyboard.png");
+			keyboardImage = new Image(Display.getDefault(), in);
+		}
+		return keyboardImage;
+	}
+
+	/**
+	 * @return the programmerImage
+	 */
+	public Image getProgrammerImage() {
+		if (programmerImage == null) {
+			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "programmer.jpg");
+			programmerImage = new Image(Display.getDefault(), in);
+		}
+		return programmerImage;
+	}
 
 	/**
 	 * Constructor.
@@ -55,6 +79,12 @@ public class ImageProvider {
 		}
 		if (searchImage != null && !searchImage.isDisposed()) {
 			searchImage.dispose();
+		}
+		if (programmerImage != null && !programmerImage.isDisposed()) {
+			programmerImage.dispose();
+		}
+		if (keyboardImage != null && !keyboardImage.isDisposed()) {
+			keyboardImage.dispose();
 		}
 	}
 

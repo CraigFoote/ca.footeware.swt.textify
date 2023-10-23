@@ -30,20 +30,20 @@ public class KeyListener extends KeyAdapter {
 			final String pressed = Action.findKeyString(e.keyCode);
 			if (pressed != null) {
 				switch (pressed) {
+				case "a":
+					((ITextOperationTarget) textify.getViewer()).doOperation(ITextOperationTarget.SELECT_ALL);
+					break;
+				case "f":
+					textify.getSearch().setVisible(true);
+					break;
+				case "p":
+					((ITextOperationTarget) textify.getViewer()).doOperation(ITextOperationTarget.PRINT);
+					break;
 				case "s":
 					textify.save();
 					break;
 				case "w":
 					textify.getViewer().getTextWidget().getShell().close();
-					break;
-				case "a":
-					((ITextOperationTarget) textify.getViewer()).doOperation(ITextOperationTarget.SELECT_ALL);
-					break;
-				case "p":
-					((ITextOperationTarget) textify.getViewer()).doOperation(ITextOperationTarget.PRINT);
-					break;
-				case "f":
-					textify.getSearch().setVisible(true);
 					break;
 				default:
 					// do nothing
