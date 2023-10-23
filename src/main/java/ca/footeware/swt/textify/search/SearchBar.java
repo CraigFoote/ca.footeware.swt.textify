@@ -177,6 +177,9 @@ public class SearchBar {
 		// exclude if not visible
 		GridData data = (GridData) container.getLayoutData();
 		data.exclude = !visible;
+		
+		// show/hide search bar
+		container.setVisible(visible);
 
 		// clear all styles in viewer
 		textify.getPresentation().clear();
@@ -184,9 +187,6 @@ public class SearchBar {
 
 		// layout to accommodate new font
 		container.getParent().getParent().pack(true);
-		
-		// show/hide search bar
-		container.setVisible(visible);
 
 		// set focus, init text widget selection and do a fresh search
 		if (visible) {
