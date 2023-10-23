@@ -53,6 +53,8 @@ public class KeyBindingsDialog extends Dialog {
 		final String shortcuts = """
 				Ctrl+A
 				Ctrl+F
+				Ctrl+N
+				Ctrl+O
 				Ctrl+P
 				Ctrl+S
 				Ctrl+W
@@ -70,6 +72,8 @@ public class KeyBindingsDialog extends Dialog {
 		final String descriptions = """
 				Select All
 				Open Search Bar
+				Create a New File
+				Open a File
 				Print
 				Save
 				Close Window

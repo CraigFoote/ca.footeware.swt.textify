@@ -36,6 +36,12 @@ public class KeyListener extends KeyAdapter {
 				case "f":
 					textify.getSearch().setVisible(true);
 					break;
+				case "n":
+					textify.newFile();
+					break;
+				case "o":
+					textify.openFile();
+					break;
 				case "p":
 					((ITextOperationTarget) textify.getViewer()).doOperation(ITextOperationTarget.PRINT);
 					break;
