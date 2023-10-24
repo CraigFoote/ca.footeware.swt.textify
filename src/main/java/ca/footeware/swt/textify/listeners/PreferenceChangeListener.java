@@ -5,6 +5,7 @@ import java.util.Iterator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jface.text.ITextViewerExtension2;
 import org.eclipse.jface.text.source.IVerticalRulerColumn;
 import org.eclipse.jface.text.source.LineNumberRulerColumn;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -39,8 +40,22 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent event) {
 		final String propertyName = event.getProperty();
 		switch (propertyName) {
-		case Constants.WRAP_PROPERTY_NAME:
-			textify.getViewer().getTextWidget().setWordWrap((boolean) event.getNewValue());
+		case Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME:
+			ITextViewerExtension2 extension = (ITextViewerExtension2) textify.getViewer();
+			if ((boolean) event.getNewValue()) {
+				extension.addPainter(textify.getCursorLinePainter());
+			} else {
+				extension.removePainter(textify.getCursorLinePainter());
+			}
+			break;
+		case Constants.FONT_PROPERTY_NAME:
+			try {
+				final FontData fontData = FontUtils.getFontData((String) event.getNewValue());
+				textify.setFont(fontData);
+				textify.getViewer().getTextWidget().setFocus();
+			} catch (FontException e1) {
+				LOGGER.log(Level.ERROR, "An error occurred getting font from preferences.", e1);
+			}
 			break;
 		case Constants.LINE_NUMBER_PROPERTY_NAME:
 			if ((boolean) event.getNewValue()) {
@@ -56,14 +71,8 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 				}
 			}
 			break;
-		case Constants.FONT_PROPERTY_NAME:
-			try {
-				final FontData fontData = FontUtils.getFontData((String) event.getNewValue());
-				textify.setFont(fontData);
-				textify.getViewer().getTextWidget().setFocus();
-			} catch (FontException e1) {
-				LOGGER.log(Level.ERROR, "An error occurred getting font from preferences.", e1);
-			}
+		case Constants.WRAP_PROPERTY_NAME:
+			textify.getViewer().getTextWidget().setWordWrap((boolean) event.getNewValue());
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown property: " + propertyName);

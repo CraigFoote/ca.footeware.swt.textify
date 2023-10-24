@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Label;
 
+import ca.footeware.swt.textify.Constants;
 import ca.footeware.swt.textify.exceptions.FontException;
 
 /**
@@ -25,7 +26,6 @@ import ca.footeware.swt.textify.exceptions.FontException;
  */
 public class FontPreferencePage extends PreferencePage {
 
-	private static final String FONT_PROPERTY_NAME = "Font";
 	private static final Logger LOGGER = LogManager.getLogger(FontPreferencePage.class);
 	private Font font;
 	private Label fontLabel;
@@ -34,7 +34,7 @@ public class FontPreferencePage extends PreferencePage {
 	 * Constructor.
 	 */
 	public FontPreferencePage() {
-		super(FONT_PROPERTY_NAME);
+		super(Constants.FONT_PROPERTY_NAME);
 		setDescription("Select a display font.");
 		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/fonts.png");
 		setImageDescriptor(descriptor);
@@ -54,7 +54,7 @@ public class FontPreferencePage extends PreferencePage {
 		// Create the label displaying the selected font
 		fontLabel = new Label(composite, SWT.NONE);
 		try {
-			String fontProperty = preferenceStore.getString(FONT_PROPERTY_NAME);
+			String fontProperty = preferenceStore.getString(Constants.FONT_PROPERTY_NAME);
 			if (fontProperty != null && !fontProperty.isEmpty()) {
 				font = new Font(parent.getDisplay(), FontUtils.getFontData(fontProperty));
 				fontLabel.setText(FontUtils.getDisplayText(font.getFontData()[0]));
@@ -102,7 +102,7 @@ public class FontPreferencePage extends PreferencePage {
 	protected void performDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		try {
-			String defaultProperty = preferenceStore.getDefaultString(FONT_PROPERTY_NAME);
+			String defaultProperty = preferenceStore.getDefaultString(Constants.FONT_PROPERTY_NAME);
 			if (defaultProperty != null && !defaultProperty.isEmpty()) {
 				FontData fontData = FontUtils.getFontData(defaultProperty);
 				font = new Font(getShell().getDisplay(), fontData);
@@ -120,7 +120,7 @@ public class FontPreferencePage extends PreferencePage {
 	public boolean performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		if (font != null) {
-			preferenceStore.setValue(FONT_PROPERTY_NAME, font.getFontData()[0].toString());
+			preferenceStore.setValue(Constants.FONT_PROPERTY_NAME, font.getFontData()[0].toString());
 		}
 		return true;
 	}

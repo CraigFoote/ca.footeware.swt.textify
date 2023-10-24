@@ -15,20 +15,19 @@ import org.eclipse.swt.widgets.Control;
 import ca.footeware.swt.textify.Constants;
 
 /**
- * Allows a user to specify whether or not to highlight all occurrences of
- * selected text.
+ * Allows a user to specify whether or not to highlight the current line.
  */
-public class LineNumberPreferencePage extends PreferencePage {
+public class CursorLInePainterPreferencePage extends PreferencePage {
 
 	private Button button;
 
 	/**
 	 * Constructor.
 	 */
-	public LineNumberPreferencePage() {
-		super(Constants.LINE_NUMBER_PROPERTY_NAME);
-		setDescription("Choose whether or not to display line numbers.");
-		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/numbered-list.png");
+	public CursorLInePainterPreferencePage() {
+		super(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
+		setDescription("Choose whether or not to highlight the current line.");
+		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/highlight.png");
 		setImageDescriptor(descriptor);
 	}
 
@@ -41,9 +40,9 @@ public class LineNumberPreferencePage extends PreferencePage {
 		IPreferenceStore preferenceStore = getPreferenceStore();
 
 		button = new Button(composite, SWT.CHECK);
-		button.setText("Show line numbers");
+		button.setText("Highlight current line");
 
-		boolean wrapProperty = preferenceStore.getBoolean(Constants.LINE_NUMBER_PROPERTY_NAME);
+		boolean wrapProperty = preferenceStore.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
 		button.setSelection(wrapProperty);
 
 		return composite;
@@ -52,14 +51,15 @@ public class LineNumberPreferencePage extends PreferencePage {
 	@Override
 	protected void performDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		boolean defaultProperty = preferenceStore.getDefaultBoolean(Constants.LINE_NUMBER_PROPERTY_NAME);
+		boolean defaultProperty = preferenceStore.getDefaultBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
 		button.setSelection(defaultProperty);
 	}
 
 	@Override
 	public boolean performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(Constants.LINE_NUMBER_PROPERTY_NAME, button.getSelection());
+		preferenceStore.setValue(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, button.getSelection());
 		return true;
 	}
+
 }
