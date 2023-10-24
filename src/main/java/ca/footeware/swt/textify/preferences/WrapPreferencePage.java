@@ -12,19 +12,20 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import ca.footeware.swt.textify.Constants;
+
 /**
  *
  */
 public class WrapPreferencePage extends PreferencePage {
 
-	private static final String WRAP_PROPERTY_NAME = "Wrap";
 	private Button button;
 
 	/**
 	 * Constructor.
 	 */
 	public WrapPreferencePage() {
-		super(WRAP_PROPERTY_NAME);
+		super(Constants.WRAP_PROPERTY_NAME);
 		setDescription("Choose whether or not to wrap text at window width.");
 		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/wrap.png");
 		setImageDescriptor(descriptor);
@@ -41,7 +42,7 @@ public class WrapPreferencePage extends PreferencePage {
 		button = new Button(composite, SWT.CHECK);
 		button.setText("Wrap Text");
 
-		boolean wrapProperty = preferenceStore.getBoolean(WRAP_PROPERTY_NAME);
+		boolean wrapProperty = preferenceStore.getBoolean(Constants.WRAP_PROPERTY_NAME);
 		button.setSelection(wrapProperty);
 
 		return composite;
@@ -50,14 +51,14 @@ public class WrapPreferencePage extends PreferencePage {
 	@Override
 	protected void performDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		boolean defaultProperty = preferenceStore.getDefaultBoolean(WRAP_PROPERTY_NAME);
+		boolean defaultProperty = preferenceStore.getDefaultBoolean(Constants.WRAP_PROPERTY_NAME);
 		button.setSelection(defaultProperty);
 	}
 
 	@Override
 	public boolean performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(WRAP_PROPERTY_NAME, button.getSelection());
+		preferenceStore.setValue(Constants.WRAP_PROPERTY_NAME, button.getSelection());
 		return true;
 	}
 }

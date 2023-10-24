@@ -26,8 +26,11 @@ import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.text.CursorLinePainter;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IPainter;
 import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.ITextViewerExtension2;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.CompositeRuler;
@@ -72,6 +75,7 @@ public class Textify extends ApplicationWindow {
 	private static final String SAVE_PROMPT = "The text has been modified. Would you like to save it?";
 	private String[] args;
 	private File currentFile;
+	private CursorLinePainter cursorLinePainter;
 	private Font font;
 	private ImageProvider imageProvider;
 	private PreferenceManager preferenceManager;
@@ -406,6 +410,15 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
+	 * Return the line painter that highlights the current line.
+	 *
+	 * @return {@link IPainter}
+	 */
+	public IPainter getCursorLinePainter() {
+		return cursorLinePainter;
+	}
+
+	/**
 	 * @return the preferenceManager
 	 */
 	public PreferenceManager getPreferenceManager() {
@@ -481,6 +494,17 @@ public class Textify extends ApplicationWindow {
 	 * Initialize appropriate widgets to their value in preferences.
 	 */
 	private void initWidgets() {
+		// highlight current (caret) line
+		final boolean currentLineBackgroundProperty = preferenceStore
+				.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
+		if (currentLineBackgroundProperty) {
+			cursorLinePainter = new CursorLinePainter(viewer);
+			cursorLinePainter
+					.setHighlightColor(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
+			ITextViewerExtension2 extension = (ITextViewerExtension2) viewer;
+			extension.addPainter(cursorLinePainter);
+		}
+
 		// set text wrap
 		final boolean wrapProperty = preferenceStore.getBoolean(Constants.WRAP_PROPERTY_NAME);
 		viewer.getTextWidget().setWordWrap(wrapProperty);

@@ -15,6 +15,7 @@ import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
 import ca.footeware.swt.textify.Constants;
+import ca.footeware.swt.textify.preferences.CursorLInePainterPreferencePage;
 import ca.footeware.swt.textify.preferences.FontPreferencePage;
 import ca.footeware.swt.textify.preferences.LineNumberPreferencePage;
 import ca.footeware.swt.textify.preferences.WrapPreferencePage;
@@ -34,17 +35,21 @@ public class PreferenceProvider {
 	 * property.
 	 */
 	private void addPreferenceNodes() {
+		PreferenceNode currentLineBackgroundNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
+				"Current Line", null, CursorLInePainterPreferencePage.class.getName());
+		preferenceManager.addToRoot(currentLineBackgroundNode);
+
 		PreferenceNode fontNode = new PreferenceNode(Constants.FONT_PROPERTY_NAME, "Font", null,
 				FontPreferencePage.class.getName());
 		preferenceManager.addToRoot(fontNode);
 
-		PreferenceNode wrapNode = new PreferenceNode(Constants.WRAP_PROPERTY_NAME, "Wrap", null,
-				WrapPreferencePage.class.getName());
-		preferenceManager.addToRoot(wrapNode);
-
 		PreferenceNode lineNumberNode = new PreferenceNode(Constants.LINE_NUMBER_PROPERTY_NAME, "Line Numbers", null,
 				LineNumberPreferencePage.class.getName());
 		preferenceManager.addToRoot(lineNumberNode);
+
+		PreferenceNode wrapNode = new PreferenceNode(Constants.WRAP_PROPERTY_NAME, "Wrap", null,
+				WrapPreferencePage.class.getName());
+		preferenceManager.addToRoot(wrapNode);
 	}
 
 	/**
@@ -110,10 +115,11 @@ public class PreferenceProvider {
 	 * Set the default preference values.
 	 */
 	private void setDefaults() {
+		preferenceStore.setDefault(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, true);
+		preferenceStore.setDefault(Constants.HIGHLIGHT_PROPERTY_NAME, false);
 		preferenceStore.setDefault(Constants.FONT_PROPERTY_NAME,
 				Display.getDefault().getSystemFont().getFontData()[0].toString());
-		preferenceStore.setDefault(Constants.WRAP_PROPERTY_NAME, true);
-		preferenceStore.setDefault(Constants.HIGHLIGHT_PROPERTY_NAME, false);
 		preferenceStore.setDefault(Constants.LINE_NUMBER_PROPERTY_NAME, true);
+		preferenceStore.setDefault(Constants.WRAP_PROPERTY_NAME, true);
 	}
 }

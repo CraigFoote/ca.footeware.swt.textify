@@ -10,6 +10,7 @@ public final class Constants {
 
 	public static final String APP_NAME = "textify";
 
+	public static final String CURSOR_LINE_PAINTER_PROPERTY_NAME = "CursorLinePainter";
 	public static final String FONT_PROPERTY_NAME = "Font";
 	public static final String HIGHLIGHT_PROPERTY_NAME = "Highlight";
 	public static final String LINE_NUMBER_PROPERTY_NAME = "LineNumbers";
