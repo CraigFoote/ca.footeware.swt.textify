@@ -186,7 +186,8 @@ public class SearchBar {
 		TextPresentation.applyTextPresentation(textify.getPresentation(), textify.getViewer().getTextWidget());
 
 		// layout to accommodate new font
-		container.getParent().getParent().pack(true);
+		container.getParent().pack(true);
+		container.getParent().getParent().layout(true);
 
 		// set focus, init text widget selection and do a fresh search
 		if (visible) {
