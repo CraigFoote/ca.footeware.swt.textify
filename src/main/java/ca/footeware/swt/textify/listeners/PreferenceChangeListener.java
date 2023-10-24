@@ -12,11 +12,13 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 
 import ca.footeware.swt.textify.Constants;
 import ca.footeware.swt.textify.Textify;
 import ca.footeware.swt.textify.exceptions.FontException;
+import ca.footeware.swt.textify.preferences.ColorUtils;
 import ca.footeware.swt.textify.preferences.FontUtils;
 
 /**
@@ -39,9 +41,14 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		final String propertyName = event.getProperty();
+		final ITextViewerExtension2 extension = (ITextViewerExtension2) textify.getViewer();
 		switch (propertyName) {
+		case Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME:
+			String hexCode = (String) event.getNewValue();
+			RGB rgb = ColorUtils.convertToRGB(hexCode);
+			textify.setCursorLineBackgroundColor(rgb);
+			break;
 		case Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME:
-			ITextViewerExtension2 extension = (ITextViewerExtension2) textify.getViewer();
 			if ((boolean) event.getNewValue()) {
 				extension.addPainter(textify.getCursorLinePainter());
 			} else {
@@ -52,7 +59,6 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 			try {
 				final FontData fontData = FontUtils.getFontData((String) event.getNewValue());
 				textify.setFont(fontData);
-				textify.getViewer().getTextWidget().setFocus();
 			} catch (FontException e1) {
 				LOGGER.log(Level.ERROR, "An error occurred getting font from preferences.", e1);
 			}
@@ -77,5 +83,6 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 		default:
 			throw new IllegalArgumentException("Unknown property: " + propertyName);
 		}
+		textify.getViewer().getTextWidget().setFocus();
 	}
 }

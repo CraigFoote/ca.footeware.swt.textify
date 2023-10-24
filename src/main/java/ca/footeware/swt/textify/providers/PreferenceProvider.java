@@ -12,10 +12,12 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import ca.footeware.swt.textify.Constants;
-import ca.footeware.swt.textify.preferences.CursorLInePainterPreferencePage;
+import ca.footeware.swt.textify.preferences.ColorUtils;
+import ca.footeware.swt.textify.preferences.CursorLinePainterPreferencePage;
 import ca.footeware.swt.textify.preferences.FontPreferencePage;
 import ca.footeware.swt.textify.preferences.LineNumberPreferencePage;
 import ca.footeware.swt.textify.preferences.WrapPreferencePage;
@@ -35,9 +37,13 @@ public class PreferenceProvider {
 	 * property.
 	 */
 	private void addPreferenceNodes() {
-		PreferenceNode currentLineBackgroundNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
-				"Current Line", null, CursorLInePainterPreferencePage.class.getName());
-		preferenceManager.addToRoot(currentLineBackgroundNode);
+		PreferenceNode cursorLinePainterNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
+				"Current Line", null, CursorLinePainterPreferencePage.class.getName());
+		preferenceManager.addToRoot(cursorLinePainterNode);
+//
+//		PreferenceNode cursorLinePainterColorNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
+//				"Current Line", null, CursorLinePainterPreferencePage.class.getName());
+//		preferenceManager.addTo(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, cursorLinePainterColorNode);
 
 		PreferenceNode fontNode = new PreferenceNode(Constants.FONT_PROPERTY_NAME, "Font", null,
 				FontPreferencePage.class.getName());
@@ -115,6 +121,8 @@ public class PreferenceProvider {
 	 * Set the default preference values.
 	 */
 	private void setDefaults() {
+		preferenceStore.setDefault(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME, ColorUtils
+				.convertToHexCode(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND).getRGB()));
 		preferenceStore.setDefault(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, true);
 		preferenceStore.setDefault(Constants.HIGHLIGHT_PROPERTY_NAME, false);
 		preferenceStore.setDefault(Constants.FONT_PROPERTY_NAME,

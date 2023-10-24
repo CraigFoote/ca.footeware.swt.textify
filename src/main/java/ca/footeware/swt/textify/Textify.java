@@ -41,10 +41,12 @@ import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -61,6 +63,7 @@ import ca.footeware.swt.textify.dialogs.KeyBindingsDialog;
 import ca.footeware.swt.textify.exceptions.FontException;
 import ca.footeware.swt.textify.listeners.KeyListener;
 import ca.footeware.swt.textify.listeners.PreferenceChangeListener;
+import ca.footeware.swt.textify.preferences.ColorUtils;
 import ca.footeware.swt.textify.preferences.FontUtils;
 import ca.footeware.swt.textify.providers.ImageProvider;
 import ca.footeware.swt.textify.providers.PreferenceProvider;
@@ -76,6 +79,7 @@ public class Textify extends ApplicationWindow {
 	private String[] args;
 	private File currentFile;
 	private CursorLinePainter cursorLinePainter;
+	private Color cursorLinePainterColor;
 	private Font font;
 	private ImageProvider imageProvider;
 	private PreferenceManager preferenceManager;
@@ -369,6 +373,12 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void dispose() {
 		preferenceStore.removePropertyChangeListener(propertyChangeListener);
+		if (cursorLinePainterColor != null && !cursorLinePainterColor.isDisposed()) {
+			cursorLinePainterColor.dispose();
+		}
+		if (cursorLinePainter != null) {
+			cursorLinePainter.dispose();
+		}
 		if (font != null && !font.isDisposed()) {
 			font.dispose();
 		}
@@ -495,14 +505,22 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void initWidgets() {
 		// highlight current (caret) line
-		final boolean currentLineBackgroundProperty = preferenceStore
+		final boolean cursorLineBackgroundProperty = preferenceStore
 				.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
-		if (currentLineBackgroundProperty) {
+		if (cursorLineBackgroundProperty) {
 			cursorLinePainter = new CursorLinePainter(viewer);
+			final String hexCode = preferenceStore.getString(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME);
+			RGB rgb = ColorUtils.convertToRGB(hexCode);
+			if (cursorLinePainterColor != null && !cursorLinePainterColor.isDisposed()) {
+				cursorLinePainterColor.dispose();
+			}
+			cursorLinePainterColor = new Color(rgb);
+			cursorLinePainter.deactivate(true);
 			cursorLinePainter
 					.setHighlightColor(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
 			ITextViewerExtension2 extension = (ITextViewerExtension2) viewer;
 			extension.addPainter(cursorLinePainter);
+			cursorLinePainter.paint(IPainter.CONFIGURATION);
 		}
 
 		// set text wrap
@@ -704,6 +722,26 @@ public class Textify extends ApplicationWindow {
 		}
 	}
 
+	/**
+	 * Set the background color of the line with the cursor.
+	 *
+	 * @param rgb {@link RGB}
+	 */
+	public void setCursorLineBackgroundColor(RGB rgb) {
+		if (cursorLinePainterColor != null && !cursorLinePainterColor.isDisposed()) {
+			cursorLinePainter.deactivate(true);
+			cursorLinePainterColor.dispose();
+		}
+		cursorLinePainterColor = new Color(rgb);
+		cursorLinePainter.setHighlightColor(cursorLinePainterColor);
+		cursorLinePainter.paint(IPainter.CONFIGURATION);
+	}
+
+	/**
+	 * Set the viewer and its ruler to the provided font.
+	 * 
+	 * @param fontData {@link FontData}
+	 */
 	public void setFont(FontData fontData) {
 		final Font newFont = new Font(getShell().getDisplay(), fontData);
 		viewer.getTextWidget().setFont(newFont);

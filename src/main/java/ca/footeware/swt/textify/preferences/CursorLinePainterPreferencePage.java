@@ -4,6 +4,7 @@
 package ca.footeware.swt.textify.preferences;
 
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -17,14 +18,15 @@ import ca.footeware.swt.textify.Constants;
 /**
  * Allows a user to specify whether or not to highlight the current line.
  */
-public class CursorLInePainterPreferencePage extends PreferencePage {
+public class CursorLinePainterPreferencePage extends PreferencePage {
 
-	private Button button;
+	private Button checkbox;
+	private ColorSelector colorSelector;
 
 	/**
 	 * Constructor.
 	 */
-	public CursorLInePainterPreferencePage() {
+	public CursorLinePainterPreferencePage() {
 		super(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
 		setDescription("Choose whether or not to highlight the current line.");
 		ImageDescriptor descriptor = ImageDescriptor.createFromFile(getClass(), "/images/highlight.png");
@@ -39,11 +41,15 @@ public class CursorLInePainterPreferencePage extends PreferencePage {
 
 		IPreferenceStore preferenceStore = getPreferenceStore();
 
-		button = new Button(composite, SWT.CHECK);
-		button.setText("Highlight current line");
+		checkbox = new Button(composite, SWT.CHECK);
+		checkbox.setText("Highlight current line");
 
-		boolean wrapProperty = preferenceStore.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
-		button.setSelection(wrapProperty);
+		boolean cursorLineProperty = preferenceStore.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
+		checkbox.setSelection(cursorLineProperty);
+
+		colorSelector = new ColorSelector(composite);
+		String colorProperty = preferenceStore.getString(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME);
+		colorSelector.setColorValue(ColorUtils.convertToRGB(colorProperty));
 
 		return composite;
 	}
@@ -51,14 +57,21 @@ public class CursorLInePainterPreferencePage extends PreferencePage {
 	@Override
 	protected void performDefaults() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		boolean defaultProperty = preferenceStore.getDefaultBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
-		button.setSelection(defaultProperty);
+
+		boolean defaultCursorLinePainterProperty = preferenceStore
+				.getDefaultBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
+		checkbox.setSelection(defaultCursorLinePainterProperty);
+
+		String defaultColorProperty = preferenceStore.getDefaultString(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME);
+		colorSelector.setColorValue(ColorUtils.convertToRGB(defaultColorProperty));
 	}
 
 	@Override
 	public boolean performOk() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, button.getSelection());
+		preferenceStore.setValue(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME,
+				ColorUtils.convertToHexCode(colorSelector.getColorValue()));
+		preferenceStore.setValue(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, checkbox.getSelection());
 		return true;
 	}
 
