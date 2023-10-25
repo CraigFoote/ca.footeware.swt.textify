@@ -42,7 +42,7 @@ A rolling log file is located in `$HOME/.local/share/textify/logs/`. They are gz
 
 **textify**  is written entirely in Java, producing a .jar file with a `MANIFEST.MF` specifying the main class. Thus, the jar can be run at the command prompt as `java -jar ca.footeware.swt.textify-#.#.#-SNAPSHOT.jar`. This is what the included launcher bash script does. There's also a `.desktop` file so the launcher shows up in the Gnome applications list and uses the provided icon. The launcher is copied into the `$HOME/.local/bin/` folder which is then added to `$PATH` so it can be used at the command prompt.
 
-To get around the limitation of not being able to use environment variables like `$HOME` in `.desktop` files, `sed` was used to resolve the user home location and enter it into the `.desktop` file upon copying.
+To get around the limitation of not being able to use environment variables like `$HOME` in `.desktop` files' `Icon` property, `sed` was used to resolve the user home location and enter it into the `.desktop` file upon copying.
 
 The project is built using maven which builds the jar as a fat jar, including all its dependencies:
 * SWT
