@@ -516,8 +516,7 @@ public class Textify extends ApplicationWindow {
 			}
 			cursorLinePainterColor = new Color(rgb);
 			cursorLinePainter.deactivate(true);
-			cursorLinePainter
-					.setHighlightColor(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND));
+			cursorLinePainter.setHighlightColor(cursorLinePainterColor);
 			ITextViewerExtension2 extension = (ITextViewerExtension2) viewer;
 			extension.addPainter(cursorLinePainter);
 			cursorLinePainter.paint(IPainter.CONFIGURATION);
