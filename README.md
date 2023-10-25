@@ -33,7 +33,7 @@ The installation will:
 4. copy the jar to `$HOME/.local/share/textify/`
 5. copy the icon to `HOME/.local/share/textify/`
 6. make the launcher executable and copy it to `$HOME/.local/bin/`
-7. Copying `.desktop` file to `$HOME/.local/share/applications/`
+7. copy `.desktop` file to `$HOME/.local/share/applications/`
 
 That's it, done. Everything installed into your home folder so there is no need for `sudo`.
 A rolling log file is located in `$HOME/.local/share/textify/logs/`. They are gzipped and deleted as they age off.
