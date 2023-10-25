@@ -40,10 +40,6 @@ public class PreferenceProvider {
 		PreferenceNode cursorLinePainterNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
 				"Current Line", null, CursorLinePainterPreferencePage.class.getName());
 		preferenceManager.addToRoot(cursorLinePainterNode);
-//
-//		PreferenceNode cursorLinePainterColorNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
-//				"Current Line", null, CursorLinePainterPreferencePage.class.getName());
-//		preferenceManager.addTo(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, cursorLinePainterColorNode);
 
 		PreferenceNode fontNode = new PreferenceNode(Constants.FONT_PROPERTY_NAME, "Font", null,
 				FontPreferencePage.class.getName());
