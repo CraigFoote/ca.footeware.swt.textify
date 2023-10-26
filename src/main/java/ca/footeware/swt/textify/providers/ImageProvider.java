@@ -10,14 +10,12 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import ca.footeware.swt.textify.Textify;
-
 /**
  * Provides...wait for it...images!
  */
 public class ImageProvider {
 
-	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
+	private static final String IMAGE_PATH = "images" + File.separator;
 	private Image keyboardImage;
 	private Image menuImage;
 	private Image newImage;
@@ -71,7 +69,7 @@ public class ImageProvider {
 	 */
 	public Image getKeyboardImage() {
 		if (keyboardImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "keyboard.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "keyboard.png");
 			keyboardImage = new Image(Display.getDefault(), in);
 		}
 		return keyboardImage;
@@ -82,7 +80,7 @@ public class ImageProvider {
 	 */
 	public Image getMenuImage() {
 		if (menuImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "menu.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "menu.png");
 			menuImage = new Image(Display.getDefault(), in);
 		}
 		return menuImage;
@@ -93,7 +91,7 @@ public class ImageProvider {
 	 */
 	public Image getNewImage() {
 		if (newImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "new.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "new.png");
 			newImage = new Image(Display.getDefault(), in);
 		}
 		return newImage;
@@ -104,7 +102,7 @@ public class ImageProvider {
 	 */
 	public Image getOpenImage() {
 		if (openImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "open.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "open.png");
 			openImage = new Image(Display.getDefault(), in);
 		}
 		return openImage;
@@ -115,7 +113,7 @@ public class ImageProvider {
 	 */
 	public Image getProgrammerImage() {
 		if (programmerImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "programmer.jpg");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "programmer.jpg");
 			programmerImage = new Image(Display.getDefault(), in);
 		}
 		return programmerImage;
@@ -126,7 +124,7 @@ public class ImageProvider {
 	 */
 	public Image getSaveAsImage() {
 		if (saveAsImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "save-as.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "save-as.png");
 			saveAsImage = new Image(Display.getDefault(), in);
 		}
 		return saveAsImage;
@@ -137,7 +135,7 @@ public class ImageProvider {
 	 */
 	public Image getSaveImage() {
 		if (saveImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "save.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "save.png");
 			saveImage = new Image(Display.getDefault(), in);
 		}
 		return saveImage;
@@ -148,7 +146,7 @@ public class ImageProvider {
 	 */
 	public Image getSearchImage() {
 		if (searchImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "search.png");
+			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "search.png");
 			searchImage = new Image(Display.getDefault(), in);
 		}
 		return searchImage;
