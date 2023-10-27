@@ -3,7 +3,7 @@
  */
 package ca.footeware.swt.textify.providers;
 
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.swt.graphics.Image;
@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class ImageProvider {
 
-	private static final String IMAGE_PATH = "images" + File.separator;
+	private static final String IMAGE_PATH = "/images/";
 	private Image keyboardImage;
 	private Image menuImage;
 	private Image newImage;
@@ -69,8 +69,17 @@ public class ImageProvider {
 	 */
 	public Image getKeyboardImage() {
 		if (keyboardImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "keyboard.png");
-			keyboardImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "keyboard.png");
+			if (in != null) {
+				try {
+					keyboardImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return keyboardImage;
 	}
@@ -80,8 +89,17 @@ public class ImageProvider {
 	 */
 	public Image getMenuImage() {
 		if (menuImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "menu.png");
-			menuImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "menu.png");
+			if (in != null) {
+				try {
+					menuImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return menuImage;
 	}
@@ -91,8 +109,17 @@ public class ImageProvider {
 	 */
 	public Image getNewImage() {
 		if (newImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "new.png");
-			newImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "new.png");
+			if (in != null) {
+				try {
+					newImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return newImage;
 	}
@@ -102,8 +129,17 @@ public class ImageProvider {
 	 */
 	public Image getOpenImage() {
 		if (openImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "open.png");
-			openImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "open.png");
+			if (in != null) {
+				try {
+					openImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return openImage;
 	}
@@ -113,8 +149,17 @@ public class ImageProvider {
 	 */
 	public Image getProgrammerImage() {
 		if (programmerImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "programmer.jpg");
-			programmerImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "programmer.jpg");
+			if (in != null) {
+				try {
+					programmerImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return programmerImage;
 	}
@@ -124,8 +169,17 @@ public class ImageProvider {
 	 */
 	public Image getSaveAsImage() {
 		if (saveAsImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "save-as.png");
-			saveAsImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "save-as.png");
+			if (in != null) {
+				try {
+					saveAsImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return saveAsImage;
 	}
@@ -135,8 +189,17 @@ public class ImageProvider {
 	 */
 	public Image getSaveImage() {
 		if (saveImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "save.png");
-			saveImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "save.png");
+			if (in != null) {
+				try {
+					saveImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return saveImage;
 	}
@@ -146,8 +209,17 @@ public class ImageProvider {
 	 */
 	public Image getSearchImage() {
 		if (searchImage == null) {
-			InputStream in = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH + "search.png");
-			searchImage = new Image(Display.getDefault(), in);
+			InputStream in = getClass().getResourceAsStream(IMAGE_PATH + "search.png");
+			if (in != null) {
+				try {
+					searchImage = new Image(Display.getDefault(), in);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+			}
 		}
 		return searchImage;
 	}
