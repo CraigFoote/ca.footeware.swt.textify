@@ -41,7 +41,6 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		final String propertyName = event.getProperty();
-		final ITextViewerExtension2 extension = (ITextViewerExtension2) textify.getViewer();
 		switch (propertyName) {
 		case Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME:
 			String hexCode = (String) event.getNewValue();
@@ -49,10 +48,12 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 			textify.setCursorLineBackgroundColor(rgb);
 			break;
 		case Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME:
-			if ((boolean) event.getNewValue()) {
-				extension.addPainter(textify.getCursorLinePainter());
-			} else {
-				extension.removePainter(textify.getCursorLinePainter());
+			if (textify.getViewer() instanceof ITextViewerExtension2 extension) {
+				if ((boolean) event.getNewValue()) {
+					extension.addPainter(textify.getCursorLinePainter());
+				} else {
+					extension.removePainter(textify.getCursorLinePainter());
+				}
 			}
 			break;
 		case Constants.FONT_PROPERTY_NAME:

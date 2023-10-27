@@ -501,6 +501,18 @@ public class Textify extends ApplicationWindow {
 	}
 
 	/**
+	 * Hides the cursor line.
+	 */
+	private void hideCursorLine() {
+		if (cursorLinePainter != null && viewer instanceof ITextViewerExtension2 extension) {
+			extension.removePainter(cursorLinePainter);
+			cursorLinePainter.deactivate(true);
+			cursorLinePainter.dispose();
+			cursorLinePainter = null;
+		}
+	}
+
+	/**
 	 * Initialize appropriate widgets to their value in preferences.
 	 */
 	private void initWidgets() {
@@ -728,17 +740,15 @@ public class Textify extends ApplicationWindow {
 	 */
 	public void setCursorLineBackgroundColor(RGB rgb) {
 		if (cursorLinePainterColor != null && !cursorLinePainterColor.isDisposed()) {
-			cursorLinePainter.deactivate(true);
-			cursorLinePainterColor.dispose();
+			hideCursorLine();
 		}
 		cursorLinePainterColor = new Color(rgb);
-		cursorLinePainter.setHighlightColor(cursorLinePainterColor);
-		cursorLinePainter.paint(IPainter.CONFIGURATION);
+		showCursorLine();
 	}
 
 	/**
 	 * Set the viewer and its ruler to the provided font.
-	 * 
+	 *
 	 * @param fontData {@link FontData}
 	 */
 	public void setFont(FontData fontData) {
@@ -750,6 +760,17 @@ public class Textify extends ApplicationWindow {
 		this.font = newFont;
 		ruler.setFont(newFont);
 		ruler.relayout();
+	}
+
+	/**
+	 * Shows the cursor line.
+	 */
+	private void showCursorLine() {
+		if (cursorLinePainter == null && viewer instanceof ITextViewerExtension2 extension) {
+			cursorLinePainter = new CursorLinePainter(viewer);
+			cursorLinePainter.setHighlightColor(cursorLinePainterColor);
+			extension.addPainter(cursorLinePainter);
+		}
 	}
 
 	/**
