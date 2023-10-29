@@ -3,21 +3,20 @@
  */
 package ca.footeware.swt.textify.providers;
 
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import ca.footeware.swt.textify.Textify;
-
 /**
  * Provides...wait for it...images!
  */
 public class ImageProvider {
 
-	private static final String IMAGE_PATH = File.separator + "images" + File.separator;
+	private static final String IMAGE_PATH = "/images/";
+	private Image backgroundImage;
 	private Image keyboardImage;
 	private Image menuImage;
 	private Image newImage;
@@ -34,6 +33,27 @@ public class ImageProvider {
 	 */
 	public ImageProvider(Shell shell) {
 		shell.addDisposeListener(e -> dispose());
+	}
+
+	/**
+	 * Create and return an image with the provided file name.
+	 *
+	 * @param name {@link String}
+	 * @return {@link Image}
+	 */
+	private Image createImage(String name) {
+		InputStream in = getClass().getResourceAsStream(IMAGE_PATH + name);
+		if (in != null) {
+			try {
+				return new Image(Display.getDefault(), in);
+			} finally {
+				try {
+					in.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -64,6 +84,19 @@ public class ImageProvider {
 		if (keyboardImage != null && !keyboardImage.isDisposed()) {
 			keyboardImage.dispose();
 		}
+		if (backgroundImage != null && !backgroundImage.isDisposed()) {
+			backgroundImage.dispose();
+		}
+	}
+
+	/**
+	 * @return the backgroundImage
+	 */
+	public Image getBackgroundImage() {
+		if (backgroundImage == null) {
+			backgroundImage = createImage("background.png");
+		}
+		return backgroundImage;
 	}
 
 	/**
@@ -71,8 +104,7 @@ public class ImageProvider {
 	 */
 	public Image getKeyboardImage() {
 		if (keyboardImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "keyboard.png");
-			keyboardImage = new Image(Display.getDefault(), in);
+			keyboardImage = createImage("keyboard.png");
 		}
 		return keyboardImage;
 	}
@@ -82,8 +114,7 @@ public class ImageProvider {
 	 */
 	public Image getMenuImage() {
 		if (menuImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "menu.png");
-			menuImage = new Image(Display.getDefault(), in);
+			menuImage = createImage("menu.png");
 		}
 		return menuImage;
 	}
@@ -93,8 +124,7 @@ public class ImageProvider {
 	 */
 	public Image getNewImage() {
 		if (newImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "new.png");
-			newImage = new Image(Display.getDefault(), in);
+			newImage = createImage("new.png");
 		}
 		return newImage;
 	}
@@ -104,8 +134,7 @@ public class ImageProvider {
 	 */
 	public Image getOpenImage() {
 		if (openImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "open.png");
-			openImage = new Image(Display.getDefault(), in);
+			openImage = createImage("open.png");
 		}
 		return openImage;
 	}
@@ -115,8 +144,7 @@ public class ImageProvider {
 	 */
 	public Image getProgrammerImage() {
 		if (programmerImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "programmer.jpg");
-			programmerImage = new Image(Display.getDefault(), in);
+			programmerImage = createImage("programmer.jpg");
 		}
 		return programmerImage;
 	}
@@ -126,8 +154,7 @@ public class ImageProvider {
 	 */
 	public Image getSaveAsImage() {
 		if (saveAsImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "save-as.png");
-			saveAsImage = new Image(Display.getDefault(), in);
+			saveAsImage = createImage("save-as.png");
 		}
 		return saveAsImage;
 	}
@@ -137,8 +164,7 @@ public class ImageProvider {
 	 */
 	public Image getSaveImage() {
 		if (saveImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "save.png");
-			saveImage = new Image(Display.getDefault(), in);
+			saveImage = createImage("save.png");
 		}
 		return saveImage;
 	}
@@ -148,8 +174,7 @@ public class ImageProvider {
 	 */
 	public Image getSearchImage() {
 		if (searchImage == null) {
-			InputStream in = Textify.class.getResourceAsStream(IMAGE_PATH + "search.png");
-			searchImage = new Image(Display.getDefault(), in);
+			searchImage = createImage("search.png");
 		}
 		return searchImage;
 	}

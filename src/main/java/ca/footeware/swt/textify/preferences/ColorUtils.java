@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package ca.footeware.swt.textify.preferences;
 
@@ -11,14 +11,8 @@ import org.eclipse.swt.graphics.RGB;
 public class ColorUtils {
 
 	/**
-	 * Hidden constructor, use static methods.
-	 */
-	private ColorUtils() {
-	}
-
-	/**
 	 * Convert an <code>RGB</code> to a hexidecimal string.
-	 * 
+	 *
 	 * @param rgb {@link RGB}
 	 * @return {@link String}
 	 */
@@ -31,7 +25,7 @@ public class ColorUtils {
 
 	/**
 	 * Convert a hexidecimal string to a <code>RGB</code>.
-	 * 
+	 *
 	 * @param hexCode {@link String}
 	 * @return {@link RGB}
 	 */
@@ -40,5 +34,11 @@ public class ColorUtils {
 		int green = Integer.valueOf(hexCode.substring(3, 5), 16);
 		int blue = Integer.valueOf(hexCode.substring(5, 7), 16);
 		return new RGB(red, green, blue);
+	}
+
+	/**
+	 * Hidden constructor, use static methods.
+	 */
+	private ColorUtils() {
 	}
 }
