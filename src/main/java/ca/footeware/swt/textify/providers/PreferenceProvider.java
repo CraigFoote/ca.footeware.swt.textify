@@ -16,6 +16,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import ca.footeware.swt.textify.Constants;
+import ca.footeware.swt.textify.preferences.BackgroundPreferencePage;
 import ca.footeware.swt.textify.preferences.ColorUtils;
 import ca.footeware.swt.textify.preferences.CursorLinePainterPreferencePage;
 import ca.footeware.swt.textify.preferences.FontPreferencePage;
@@ -37,6 +38,10 @@ public class PreferenceProvider {
 	 * property.
 	 */
 	private void addPreferenceNodes() {
+		PreferenceNode backgroundNode = new PreferenceNode(Constants.BACKGROUND_PROPERTY_NAME, "Background", null,
+				BackgroundPreferencePage.class.getName());
+		preferenceManager.addToRoot(backgroundNode);
+
 		PreferenceNode cursorLinePainterNode = new PreferenceNode(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME,
 				"Current Line", null, CursorLinePainterPreferencePage.class.getName());
 		preferenceManager.addToRoot(cursorLinePainterNode);
@@ -117,6 +122,7 @@ public class PreferenceProvider {
 	 * Set the default preference values.
 	 */
 	private void setDefaults() {
+		preferenceStore.setDefault(Constants.BACKGROUND_PROPERTY_NAME, false);
 		preferenceStore.setDefault(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME, ColorUtils
 				.convertToHexCode(Display.getDefault().getSystemColor(SWT.COLOR_WIDGET_DISABLED_FOREGROUND).getRGB()));
 		preferenceStore.setDefault(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME, true);

@@ -42,6 +42,9 @@ public final class PreferenceChangeListener implements IPropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent event) {
 		final String propertyName = event.getProperty();
 		switch (propertyName) {
+		case Constants.BACKGROUND_PROPERTY_NAME:
+			textify.setBackground((boolean) event.getNewValue());
+			break;
 		case Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME:
 			String hexCode = (String) event.getNewValue();
 			RGB rgb = ColorUtils.convertToRGB(hexCode);

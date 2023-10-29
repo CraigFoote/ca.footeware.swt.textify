@@ -366,6 +366,8 @@ public class Textify extends ApplicationWindow {
 			// set shell title
 			getShell().setText("* " + getShell().getText().replaceFirst("\\* ", ""));
 		});
+
+		viewer.getTextWidget().setBackgroundImage(imageProvider.getBackgroundImage());
 	}
 
 	/**
@@ -516,6 +518,11 @@ public class Textify extends ApplicationWindow {
 	 * Initialize appropriate widgets to their value in preferences.
 	 */
 	private void initWidgets() {
+		// background image
+		// set text wrap
+		final boolean backgroundProperty = preferenceStore.getBoolean(Constants.BACKGROUND_PROPERTY_NAME);
+		setBackground(backgroundProperty);
+
 		// highlight current (caret) line
 		final boolean cursorLineBackgroundProperty = preferenceStore
 				.getBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
@@ -730,6 +737,19 @@ public class Textify extends ApplicationWindow {
 		// do we have everything we need to write file?
 		if (write) {
 			write(file);
+		}
+	}
+
+	/**
+	 * Set a background image in the viewer.
+	 *
+	 * @param show
+	 */
+	public void setBackground(boolean show) {
+		if (show) {
+			viewer.getTextWidget().setBackgroundImage(imageProvider.getBackgroundImage());
+		} else {
+			viewer.getTextWidget().setBackgroundImage(null);
 		}
 	}
 

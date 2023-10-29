@@ -62,7 +62,8 @@ public class CursorLinePainterPreferencePage extends PreferencePage {
 				.getDefaultBoolean(Constants.CURSOR_LINE_PAINTER_PROPERTY_NAME);
 		checkbox.setSelection(defaultCursorLinePainterProperty);
 
-		String defaultColorProperty = preferenceStore.getDefaultString(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME);
+		String defaultColorProperty = preferenceStore
+				.getDefaultString(Constants.CURSOR_LINE_PAINTER_COLOR_PROPERTY_NAME);
 		colorSelector.setColorValue(ColorUtils.convertToRGB(defaultColorProperty));
 	}
 
