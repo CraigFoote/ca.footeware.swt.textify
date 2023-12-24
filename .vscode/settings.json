@@ -1,0 +1,16 @@
+{
+    "files.autoSave": "afterDelay",
+    "editor.fontFamily": "'Fira Code', 'monospace', monospace",
+    "editor.fontSize": 11,
+    "files.exclude": {
+        "**/.gitignore": true,
+        "/target": true
+    },
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.defaultFormatter": "redhat.java",
+    "java.configuration.runtimes": [{
+        "name": "JavaSE-21",
+        "path": "/usr/lib/jvm/java-21-openjdk-amd64/",
+        "default": true
+    ]
+}

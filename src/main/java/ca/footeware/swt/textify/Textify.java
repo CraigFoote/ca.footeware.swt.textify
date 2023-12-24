@@ -146,7 +146,7 @@ public class Textify extends ApplicationWindow {
 		if (textChanged) {
 			final MessageBox box = new MessageBox(getShell(), SWT.YES | SWT.NO | SWT.CANCEL | SWT.ICON_QUESTION);
 			box.setText("Save");
-			box.setMessage("Text has been modified. Would you like to save it before closing?");
+			box.setMessage(SAVE_PROMPT);
 			int response = box.open();
 			if (response == SWT.CANCEL) {
 				return false;
@@ -519,7 +519,6 @@ public class Textify extends ApplicationWindow {
 	 */
 	private void initWidgets() {
 		// background image
-		// set text wrap
 		final boolean backgroundProperty = preferenceStore.getBoolean(Constants.BACKGROUND_PROPERTY_NAME);
 		setBackground(backgroundProperty);
 

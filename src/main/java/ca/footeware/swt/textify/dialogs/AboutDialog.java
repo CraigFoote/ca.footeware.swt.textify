@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -63,6 +64,7 @@ public class AboutDialog extends Dialog {
 
 		final Label label = new Label(container, SWT.NONE);
 		label.setImage(imageProvider.getProgrammerImage());
+		GridDataFactory.swtDefaults().grab(true, false).align(SWT.CENTER, SWT.CENTER).applyTo(label);
 
 		final Link link = new Link(container, SWT.NONE);
 		link.setText("Another fine mess by <a href=\"http://footeware.ca\">Footeware.ca</a>");
