@@ -114,7 +114,7 @@ public class PreferenceProvider {
 			preferenceStore.load();
 			configured = true;
 		} catch (IOException e) {
-			LOGGER.log(Level.INFO, "Preferences did not load. It is likely preferences are yet to be saved.", e);
+			LOGGER.log(Level.INFO, "Preferences did not load. It is likely preferences are yet to be saved.");
 		}
 	}
 
