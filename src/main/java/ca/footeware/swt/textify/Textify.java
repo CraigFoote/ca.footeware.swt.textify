@@ -148,11 +148,12 @@ public class Textify extends ApplicationWindow {
 			box.setText("Save");
 			box.setMessage(SAVE_PROMPT);
 			int response = box.open();
-			if (response == SWT.CANCEL) {
+			switch (response) {
+			case SWT.CANCEL:
 				return false;
-			} else if (response == SWT.NO) {
+			case SWT.NO:
 				return super.close();
-			} else {
+			default:
 				if (!save()) {
 					return false;
 				}
